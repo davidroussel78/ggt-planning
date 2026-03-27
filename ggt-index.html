@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GGT — Planning</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d0f14;
+    --surface: #161a23;
+    --surface2: #1e2330;
+    --border: rgba(255,255,255,0.08);
+    --text: #e8eaf0;
+    --muted: #7a8099;
+    --accent: #4f8ef7;
+    --orange: #fc4c02;
+  }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg); font-family: 'Outfit', sans-serif;
+    color: var(--text); display: flex; align-items: center;
+    justify-content: center; min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 20% 0%, rgba(79,142,247,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 100%, rgba(252,76,2,0.05) 0%, transparent 60%);
+  }
+  .card {
+    background: var(--surface); border: 0.5px solid var(--border);
+    border-radius: 20px; padding: 40px 36px; width: 100%; max-width: 400px;
+    margin: 20px;
+  }
+  .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+  .logo-icon {
+    width: 48px; height: 48px; border-radius: 12px;
+    background: linear-gradient(135deg, #fc4c02, #e8350a);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .logo-text h1 { font-size: 18px; font-weight: 600; }
+  .logo-text p { font-size: 12px; color: var(--muted); }
+  .form-group { margin-bottom: 16px; }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 500; letter-spacing: 0.05em; }
+  input {
+    width: 100%; background: var(--surface2); border: 0.5px solid var(--border);
+    border-radius: 10px; padding: 11px 14px; color: var(--text);
+    font-family: 'Outfit', sans-serif; font-size: 14px; outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus { border-color: var(--accent); }
+  .btn {
+    width: 100%; padding: 12px; border-radius: 10px; border: none;
+    background: var(--accent); color: #fff; font-family: 'Outfit', sans-serif;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s; margin-top: 8px;
+  }
+  .btn:hover { opacity: 0.9; }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .error {
+    background: rgba(224,0,32,0.12); border: 0.5px solid rgba(224,0,32,0.3);
+    border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #ff6b6b;
+    margin-bottom: 16px; display: none;
+  }
+  .footer { text-align: center; margin-top: 24px; font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <div class="logo-icon">🏃</div>
+    <div class="logo-text">
+      <h1>GGT Planning</h1>
+      <p>Génépi Groupe Trail</p>
+    </div>
+  </div>
+
+  <div class="error" id="error-msg"></div>
+
+  <div class="form-group">
+    <label>ADRESSE E-MAIL</label>
+    <input type="email" id="email" placeholder="ton@email.fr" autocomplete="email">
+  </div>
+  <div class="form-group">
+    <label>MOT DE PASSE</label>
+    <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+  </div>
+  <button class="btn" id="btn-login" onclick="login()">Se connecter</button>
+
+  <div class="footer">Accès réservé aux adhérents GGT</div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // ⚙️ REMPLACE PAR TA CONFIG FIREBASE
+const firebaseConfig = {
+  apiKey: "AIzaSyC7xvY3YyAg765ViBoTdBrqieTY5b7sAGs",
+  authDomain: "ggt-planning.firebaseapp.com",
+  projectId: "ggt-planning",
+  storageBucket: "ggt-planning.firebasestorage.app",
+  messagingSenderId: "713830377332",
+  appId: "1:713830377332:web:cd5b04e0ea994c11ed2e21",
+  measurementId: "G-VJGSDYSEDL"
+};
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const snap = await getDoc(doc(db, "users", user.uid));
+      const role = snap.exists() ? snap.data().role : "adherent";
+      window.location.href = role === "admin" ? "admin.html" : "planning.html";
+    }
+  });
+
+  window.login = async function() {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    const btn = document.getElementById("btn-login");
+    const err = document.getElementById("error-msg");
+    err.style.display = "none";
+    btn.disabled = true;
+    btn.textContent = "Connexion...";
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (e) {
+      err.textContent = e.code === "auth/invalid-credential"
+        ? "E-mail ou mot de passe incorrect."
+        : "Erreur de connexion. Vérifie tes identifiants.";
+      err.style.display = "block";
+      btn.disabled = false;
+      btn.textContent = "Se connecter";
+    }
+  };
+
+  document.addEventListener("keydown", e => {
+    if (e.key === "Enter") window.login();
+  });
+</script>
+</body>
+</html>

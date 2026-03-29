@@ -236,23 +236,23 @@
             <th>%VMA</th>
             <th>km/h</th>
             <th>%FCM</th>
-            <th>15s</th>
-            <th>30s</th>
-            <th>45s</th>
-            <th>1 min</th>
-            <th>2 min</th>
-            <th>3 min</th>
-            <th>4 min</th>
-            <th>5 min</th>
-            <th>Temps⏱ (s)</th>
-            <th>Temps⏱ (min)</th>
+            <th>en 15s (m)</th>
+            <th>en 30s (m)</th>
+            <th>en 45s (m)</th>
+            <th>en 1min (m)</th>
+            <th>en 2min (m)</th>
+            <th>en 3min (m)</th>
+            <th>en 4min (m)</th>
+            <th>en 5min (m)</th>
+            <th>en ⏱ perso sec (m)</th>
+            <th>en ⏱ perso min (m)</th>
           </tr>
         </thead>
         <tbody id="tbody-fcm"></tbody>
       </table>
     </div>
     <div class="legend">
-      ⏱ = tes temps personnels de référence
+      Les valeurs indiquent la distance parcourue (en mètres) pour chaque durée, à chaque % de VMA. &nbsp;|&nbsp; ⏱ = tes temps personnels de référence
     </div>
   </div>
 
@@ -362,32 +362,45 @@ const firebaseConfig = {
     tbody.innerHTML = rows;
   }
 
+  function fmtDist(m) {
+    if (m == null || isNaN(m)) return '—';
+    return Math.round(m) + 'm';
+  }
+
   function buildFcmTable(vma, fcm, tempsSec, tempsMin) {
     const tbody = document.getElementById('tbody-fcm');
     let rows = '';
     LEVELS.forEach((pct, i) => {
       const kmh = +(vma * pct).toFixed(2);
-      const ms = kmh / 3.6;
+      const ms = kmh / 3.6; // m/s
       const fcPct = FCM_PCT[i] != null ? Math.round(FCM_PCT[i]*100) + '%' : '—';
-      const dist = (d) => fmtSec(d/ms);
-      const tSec = ms * tempsSec;
-      const tMin = ms * tempsMin * 60;
+      // Temps → Distance : d = vitesse × temps
+      const d15  = ms * 15;
+      const d30  = ms * 30;
+      const d45  = ms * 45;
+      const d60  = ms * 60;
+      const d120 = ms * 120;
+      const d180 = ms * 180;
+      const d240 = ms * 240;
+      const d300 = ms * 300;
+      const dPersoSec = ms * tempsSec;
+      const dPersoMin = ms * tempsMin * 60;
       const isRef = Math.abs(pct - 1.0) < 0.001;
       const cls = isRef ? ' class="highlight-row"' : '';
       rows += `<tr${cls}>
         <td class="td-pct">${Math.round(pct*100)}%</td>
         <td class="td-kmh">${kmh.toFixed(1)}</td>
         <td class="td-fc">${fcPct}</td>
-        <td class="td-time">${dist(kmh/3.6*15)}</td>
-        <td class="td-time">${dist(kmh/3.6*30)}</td>
-        <td class="td-time">${dist(kmh/3.6*45)}</td>
-        <td class="td-time">${dist(kmh/3.6*60)}</td>
-        <td class="td-time">${dist(kmh/3.6*120)}</td>
-        <td class="td-time">${dist(kmh/3.6*180)}</td>
-        <td class="td-time">${dist(kmh/3.6*240)}</td>
-        <td class="td-time">${dist(kmh/3.6*300)}</td>
-        <td class="td-perso">${fmtSec(tSec)}</td>
-        <td class="td-perso">${fmtTime(tMin/60)}</td>
+        <td class="td-time">${fmtDist(d15)}</td>
+        <td class="td-time">${fmtDist(d30)}</td>
+        <td class="td-time">${fmtDist(d45)}</td>
+        <td class="td-time">${fmtDist(d60)}</td>
+        <td class="td-time">${fmtDist(d120)}</td>
+        <td class="td-time">${fmtDist(d180)}</td>
+        <td class="td-time">${fmtDist(d240)}</td>
+        <td class="td-time">${fmtDist(d300)}</td>
+        <td class="td-perso">${fmtDist(dPersoSec)}</td>
+        <td class="td-perso">${fmtDist(dPersoMin)}</td>
       </tr>`;
     });
     tbody.innerHTML = rows;

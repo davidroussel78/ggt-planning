@@ -156,6 +156,22 @@
   }
   .btn-unpublish:hover { background: rgba(224,0,32,0.1); }
 
+  .msg-field {
+    width: 100%; background: var(--surface2); border: 0.5px solid rgba(79,142,247,0.2);
+    border-radius: 10px; padding: 12px 14px; color: var(--text);
+    font-family: 'Outfit', sans-serif; font-size: 13px; outline: none;
+    resize: vertical; min-height: 60px; line-height: 1.6;
+    transition: border-color 0.2s; margin-top: 8px;
+  }
+  .msg-field:focus { border-color: var(--accent); }
+  .msg-field::placeholder { color: var(--muted); }
+  .msg-card {
+    background: rgba(79,142,247,0.05); border: 0.5px solid rgba(79,142,247,0.2);
+    border-radius: 12px; padding: 14px 16px; margin-bottom: 16px;
+  }
+  .msg-card-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 2px; }
+  .msg-card-hint { font-size: 11px; color: var(--muted); }
+
   .toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
     background: var(--surface2); border: 0.5px solid rgba(34,197,94,0.4);
@@ -206,6 +222,12 @@
 
   <div class="draft-notice" id="draft-notice">
     ⚠️ Ce planning est en brouillon — les adhérents ne le voient pas encore. Clique sur "Publier" pour le rendre visible.
+  </div>
+
+  <div class="msg-card">
+    <div class="msg-card-label">💬 Message de la semaine</div>
+    <div class="msg-card-hint">Visible par tous les adhérents en haut du planning · Laisse vide si rien à signaler</div>
+    <textarea class="msg-field" id="message-semaine" placeholder="Ex: Cette semaine on adapte le jeudi seuil en raison du froid — rendez-vous 18h30 au parking habituel..."></textarea>
   </div>
 
   <div class="days-list" id="days-list">
@@ -362,6 +384,8 @@ const firebaseConfig = {
     }
     document.getElementById('last-update').textContent = updatedAt
       ? `Modifié le ${updatedAt.toLocaleString('fr-FR')}` : '';
+    const msgField = document.getElementById('message-semaine');
+    if (msgField) msgField.value = weekData.message || '';
 
     let html = '';
     for (let i = 0; i < 7; i++) {
@@ -410,9 +434,10 @@ const firebaseConfig = {
 
   async function save(published) {
     const weekKey = getWeekKey(getMondayOfWeek(currentWeekOffset));
+    const message = document.getElementById('message-semaine')?.value.trim() || '';
     try {
       await setDoc(doc(db, "plannings", weekKey), {
-        jours: weekData.jours, published, updatedAt: serverTimestamp()
+        jours: weekData.jours, published, message, updatedAt: serverTimestamp()
       });
       return true;
     } catch(e) { showToast('Erreur lors de la sauvegarde', true); return false; }

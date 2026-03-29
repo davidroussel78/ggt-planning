@@ -145,6 +145,56 @@
   .lex-item strong { color: var(--accent); display: block; margin-bottom: 1px; }
   .lex-item span { color: var(--muted); }
 
+  /* Message de la semaine */
+  .message-semaine {
+    max-width: 1300px; margin: 0 auto 0; padding: 0 20px 12px;
+  }
+  .message-box {
+    background: rgba(79,142,247,0.08); border: 0.5px solid rgba(79,142,247,0.25);
+    border-radius: 12px; padding: 14px 18px; font-size: 13px; color: #c8d4f0;
+    line-height: 1.7; white-space: pre-line; display: none;
+  }
+  .message-box.visible { display: block; }
+  .message-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+
+  /* Onglets bas de page */
+  .bottom-tabs { max-width: 1300px; margin: 0 auto; padding: 8px 20px 4px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btab-btn {
+    background: var(--surface); border: 0.5px solid var(--border);
+    border-radius: 8px; padding: 7px 16px; color: var(--muted);
+    font-family: 'Outfit', sans-serif; font-size: 13px; cursor: pointer;
+    transition: all 0.2s; text-decoration: none; display: inline-block;
+  }
+  .btab-btn.active { background: var(--surface2); border-color: var(--accent); color: var(--text); }
+  .btab-btn:hover { border-color: var(--accent); color: var(--text); }
+  .btab-panel { display: none; }
+  .btab-panel.active { display: block; }
+
+  /* Tableau des allures */
+  .allures-wrap { max-width: 1300px; margin: 0 auto; padding: 8px 20px 20px; }
+  .allures-table-wrap { overflow-x: auto; border-radius: 12px; border: 0.5px solid var(--border); }
+  .allures-table { width: 100%; border-collapse: collapse; font-size: 12px; background: var(--surface); }
+  .allures-table th {
+    background: var(--surface2); color: var(--muted); font-size: 10px; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase; padding: 10px 8px; text-align: center;
+    border-bottom: 0.5px solid var(--border); white-space: nowrap;
+  }
+  .allures-table td { padding: 8px; text-align: center; border-bottom: 0.5px solid rgba(255,255,255,0.04); font-size: 12px; color: var(--text); }
+  .allures-table tr:last-child td { border-bottom: none; }
+  .zone-0 { background: rgba(122,128,153,0.08); }
+  .zone-1 { background: rgba(122,128,153,0.08); }
+  .zone-2 { background: rgba(122,128,153,0.08); }
+  .zone-3 { background: rgba(122,128,153,0.08); }
+  .zone-4 { background: rgba(34,197,94,0.06); }
+  .zone-5 { background: rgba(34,197,94,0.10); }
+  .zone-6 { background: rgba(245,158,11,0.08); }
+  .zone-7 { background: rgba(245,158,11,0.12); }
+  .zone-8 { background: rgba(252,76,2,0.08); }
+  .zone-9 { background: rgba(252,76,2,0.12); }
+  .zone-10 { background: rgba(239,68,68,0.12); }
+  .seuil-row td { border-top: 1px solid rgba(79,142,247,0.3); }
+  .seuil-label { font-size: 9px; color: var(--accent); font-weight: 700; text-align: left !important; padding-left: 6px !important; }
+
   @media (max-width: 900px) { .days-grid { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width: 500px) { .days-grid { grid-template-columns: 1fr; } header { padding: 12px 16px; } }
 </style>
@@ -175,13 +225,26 @@
   <button class="nav-btn" id="btn-next" onclick="changeWeek(1)">Suivante →</button>
 </div>
 
+<div class="message-semaine">
+  <div class="message-box" id="message-box">
+    <div class="message-label">💬 Message de CoachDav</div>
+    <span id="message-text"></span>
+  </div>
+</div>
+
 <div id="content">
   <div class="loading"><div class="spinner"></div> Chargement du planning...</div>
 </div>
 
+<div class="bottom-tabs">
+  <button class="btab-btn active" onclick="showBTab('btab-lexique', this)">📖 Lexique</button>
+  <button class="btab-btn" onclick="showBTab('btab-allures', this)">⚡ Tableau des allures</button>
+  <a href="vma.html" class="btab-btn">📊 Mon tableau VMA/FCM</a>
+</div>
+
+<div class="btab-panel active" id="btab-lexique">
 <div class="lexique-wrap">
-  <button class="btn-lex" onclick="toggleLexique()">📖 Lexique des abréviations</button>
-  <div class="lexique-panel" id="lexique">
+  <div class="lexique-panel" id="lexique" style="display:block;margin-top:0;">
 
     <div class="lex-section">
       <h3>🌍 Commun — toutes communes</h3>
@@ -256,7 +319,45 @@
 
   </div>
 </div>
+</div>
 
+<div class="btab-panel" id="btab-allures">
+<div class="allures-wrap">
+  <div class="allures-table-wrap">
+    <table class="allures-table">
+      <thead>
+        <tr>
+          <th>Échelle</th>
+          <th>Niveau d'intensité</th>
+          <th>Exemple d'activité</th>
+          <th>Capacité à parler / Respiration</th>
+          <th>Zone cardio (%FCM)</th>
+          <th>%VMA</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="zone-0"><td>0</td><td>Inactif</td><td>Repos</td><td>Conversation facile · Respiration normale</td><td>&lt;40%</td><td>—</td></tr>
+        <tr class="zone-1"><td>1</td><td>Imperceptible</td><td>Marche</td><td>Conversation facile · Respiration normale</td><td>40% – 50%</td><td>—</td></tr>
+        <tr class="zone-2"><td>2</td><td>Très faible</td><td>Marche active</td><td>Conversation facile · Respiration légère</td><td>50% – 55%</td><td>—</td></tr>
+        <tr class="zone-3"><td>3</td><td>Faible</td><td>Randonnée à pied ou en vélo</td><td>Conversation facile · Respiration modérée</td><td>55% – 60%</td><td>—</td></tr>
+        <tr class="zone-4"><td>4</td><td>Très modéré</td><td>Footing lent</td><td>Conversation facile · Respiration accélérée</td><td>60% – 65%</td><td>50% – 55%</td></tr>
+        <tr class="zone-5"><td>5</td><td>Modéré</td><td>Footing (Endurance Fondamentale)</td><td>Conversation par phrases plus courtes · Respiration accélérée</td><td>65% – 75%</td><td>55% – 70%</td></tr>
+        <tr class="seuil-row zone-5"><td colspan="6" class="seuil-label">▲ SEUIL AÉROBIE — Fabrication de lactates + oxygène · Peut tenir longtemps dans l'effort</td></tr>
+        <tr class="zone-6"><td>6</td><td>Légèrement intense</td><td>Endurance active</td><td>Conversation par quelques mots · Respiration forte</td><td>75% – 80%</td><td>70% – 75%</td></tr>
+        <tr class="zone-7"><td>7</td><td>Intense</td><td>Allure marathon à semi-marathon</td><td>Conversation difficile · Respiration très forte</td><td>80% – 85%</td><td>75% – 80%</td></tr>
+        <tr class="seuil-row zone-7"><td colspan="6" class="seuil-label">▲ SEUIL ANAÉROBIE LACTIQUE — Fabrication de lactates sans oxygène · Trop de lactates : jambes lourdes, plus de jus</td></tr>
+        <tr class="zone-8"><td>8</td><td>Très intense</td><td>Allure semi-marathon</td><td>Conversation quasi impossible · Respiration quasi maximale</td><td>85% – 90%</td><td>80% – 85%</td></tr>
+        <tr class="zone-9"><td>9</td><td>Extrêmement intense</td><td>Allure 5 à 10 km</td><td>Conversation impossible · Respiration maximale</td><td>90% – 95%</td><td>85% – 90%</td></tr>
+        <tr class="zone-10"><td>10</td><td>Maximal</td><td>Allure 5km à max **</td><td>À bout de souffle · À la limite de l'explosion *</td><td>95% – 100%</td><td>90% – 100%</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.8;padding:0 4px;">
+    * FCM = Fréquence Cardiaque Maximale &nbsp;|&nbsp;
+    ** Zone d'allure très large où l'on ne peut plus se fier uniquement au cardio ou à ses sensations.
+  </div>
+</div>
+</div>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -370,6 +471,17 @@ const firebaseConfig = {
       html += '</div>';
       document.getElementById('content').innerHTML = html;
 
+      // Afficher le message de la semaine
+      const msgBox = document.getElementById('message-box');
+      const msgText = document.getElementById('message-text');
+      const msg = snap.data().message || '';
+      if (msg.trim()) {
+        msgText.textContent = msg;
+        msgBox.classList.add('visible');
+      } else {
+        msgBox.classList.remove('visible');
+      }
+
     } catch(e) {
       document.getElementById('content').innerHTML = '<div class="loading">❌ Erreur de chargement.</div>';
     }
@@ -395,5 +507,10 @@ const firebaseConfig = {
 
   window.changeWeek = (dir) => { currentWeekOffset += dir; loadWeek(); };
   window.logout = () => signOut(auth).then(() => window.location.href = 'index.html');
-  window.toggleLexique = () => document.getElementById('lexique').classList.toggle('open');
+  window.showBTab = function(id, btn) {
+    document.querySelectorAll('.btab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.btab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if (btn) btn.classList.add('active');
+  };
 </script>

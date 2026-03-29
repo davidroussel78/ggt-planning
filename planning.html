@@ -420,8 +420,8 @@ const firebaseConfig = {
       currentWeekOffset === 1 ? 'Semaine prochaine' :
       `Semaine du ${formatDate(monday)}`;
     document.getElementById('week-dates').textContent = `${formatDate(monday)} – ${formatDate(sunday)}`;
-    document.getElementById('btn-prev').disabled = currentWeekOffset <= -12;
-    document.getElementById('btn-next').disabled = currentWeekOffset >= 12;
+    document.getElementById('btn-prev').disabled = currentWeekOffset <= -52;
+    document.getElementById('btn-next').disabled = currentWeekOffset >= 52;
     document.getElementById('content').innerHTML = '<div class="loading"><div class="spinner"></div> Chargement...</div>';
 
     try {

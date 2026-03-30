@@ -198,15 +198,10 @@
             <th>FC (bpm)</th>
             <th>%FCM</th>
             <th>100m (s)</th>
-            <th>200m (s)</th>
             <th>200m (min)</th>
-            <th>300m (s)</th>
             <th>300m (min)</th>
-            <th>400m (s)</th>
             <th>400m (min)</th>
-            <th>500m (s)</th>
             <th>500m (min)</th>
-            <th>1000m (s)</th>
             <th>1000m (min)</th>
             <th>2000m (min)</th>
             <th>3000m (min)</th>
@@ -216,6 +211,7 @@
             <th>Semi (min)</th>
             <th>Marathon</th>
             <th>Perso 🏅</th>
+            <th>%VMA</th>
           </tr>
         </thead>
         <tbody id="tbody-vma"></tbody>
@@ -339,15 +335,10 @@ const firebaseConfig = {
         <td class="td-fc">${fc}</td>
         <td class="td-fc">${fcPct}</td>
         <td class="td-time">${fmtSec(t100)}</td>
-        <td class="td-time">${fmtSec(t200)}</td>
         <td class="td-time">${fmtMin(t200)}</td>
-        <td class="td-time">${fmtSec(t300)}</td>
         <td class="td-time">${fmtMin(t300)}</td>
-        <td class="td-time">${fmtSec(t400)}</td>
         <td class="td-time">${fmtMin(t400)}</td>
-        <td class="td-time">${fmtSec(t500)}</td>
         <td class="td-time">${fmtMin(t500)}</td>
-        <td class="td-time">${fmtSec(t1000)}</td>
         <td class="td-time">${fmtMin(t1000)}</td>
         <td class="td-time">${fmtTime(t2000)}</td>
         <td class="td-time">${fmtTime(t3000)}</td>
@@ -357,6 +348,7 @@ const firebaseConfig = {
         <td class="td-time">${fmtTime(t21100)}</td>
         <td class="td-time">${fmtTime(t42200)}</td>
         <td class="td-perso">${fmtTime(tPerso)}</td>
+        <td class="td-pct">${Math.round(pct*100)}%</td>
       </tr>`;
     });
     tbody.innerHTML = rows;

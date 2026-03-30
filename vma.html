@@ -323,7 +323,7 @@ const firebaseConfig = {
       const fc = FCM_PCT[i] != null ? Math.round(fcm * FCM_PCT[i]) : '—';
       const fcPct = FCM_PCT[i] != null ? Math.round(FCM_PCT[i]*100) + '%' : '—';
       const t100 = 100/ms, t200 = 200/ms, t300 = 300/ms, t400 = 400/ms, t500 = 500/ms;
-      const t1000 = 1000/ms, t2000 = 2000/ms, t3000 = 3000/ms;
+      const t1000 = 1000/ms, t2000 = 2000/ms/60, t3000 = 3000/ms/60;
       const t5000 = 5000/ms/60, t10000 = 10000/ms/60;
       const t15000 = 15000/ms/60, t21100 = 21100/ms/60, t42200 = 42200/ms/60;
       const tPerso = distPerso/ms/60;

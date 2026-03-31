@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GGT — Plan de course</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d0f14; --surface: #161a23; --surface2: #1e2330;
+    --border: rgba(255,255,255,0.08); --text: #e8eaf0;
+    --muted: #7a8099; --accent: #4f8ef7; --orange: #fc4c02;
+    --green: #22c55e; --amber: #f59e0b;
+  }
+  html, body { min-height: 100%; }
+  body {
+    background: var(--bg); font-family: 'Outfit', sans-serif; color: var(--text);
+    background-image: radial-gradient(ellipse 80% 60% at 20% 0%, rgba(79,142,247,0.06) 0%, transparent 60%);
+  }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 24px; border-bottom: 0.5px solid var(--border);
+    background: rgba(22,26,35,0.9); backdrop-filter: blur(10px);
+    position: sticky; top: 0; z-index: 10; flex-wrap: wrap; gap: 8px;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon { width: 36px; height: 36px; border-radius: 9px; overflow: hidden; }
+  .logo-icon img { width: 36px; height: 36px; object-fit: contain; }
+  .logo h1 { font-size: 16px; font-weight: 600; }
+  .logo p { font-size: 11px; color: var(--muted); }
+  .btn-head {
+    background: var(--surface2); border: 0.5px solid var(--border);
+    border-radius: 8px; padding: 6px 12px; color: var(--muted);
+    font-family: 'Outfit', sans-serif; font-size: 12px; cursor: pointer;
+    transition: color 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 5px;
+  }
+  .btn-head:hover { color: var(--text); border-color: var(--accent); }
+
+  .main { max-width: 1300px; margin: 0 auto; padding: 20px; }
+
+  /* CHOIX PLAN */
+  .plan-chooser {
+    display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; align-items: center;
+  }
+  .plan-chooser label { font-size: 13px; color: var(--muted); margin-right: 4px; }
+  .plan-btn {
+    padding: 8px 20px; border-radius: 10px; border: 0.5px solid var(--border);
+    background: var(--surface); color: var(--muted); cursor: pointer;
+    font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600;
+    transition: all 0.2s;
+  }
+  .plan-btn:hover { border-color: var(--accent); color: var(--text); }
+  .plan-btn.active-a { background: rgba(252,76,2,0.15); border-color: var(--orange); color: var(--orange); }
+  .plan-btn.active-b { background: rgba(79,142,247,0.15); border-color: var(--accent); color: var(--accent); }
+  .plan-btn.active-c { background: rgba(34,197,94,0.15); border-color: var(--green); color: var(--green); }
+  .plan-desc { font-size: 12px; color: var(--muted); padding: 6px 12px; background: var(--surface); border-radius: 8px; border: 0.5px solid var(--border); }
+
+  /* PHASES */
+  .phase-block { margin-bottom: 32px; }
+  .phase-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 18px; border-radius: 12px; margin-bottom: 14px;
+    border: 0.5px solid var(--border);
+  }
+  .phase-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .phase-title { font-size: 15px; font-weight: 600; }
+  .phase-period { font-size: 12px; color: var(--muted); margin-left: auto; }
+
+  /* SEMAINES */
+  .week-block { margin-bottom: 16px; }
+  .week-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 14px; background: var(--surface); border-radius: 10px 10px 0 0;
+    border: 0.5px solid var(--border); border-bottom: none;
+  }
+  .week-num { font-size: 11px; font-weight: 700; color: var(--orange); letter-spacing: 0.06em; text-transform: uppercase; }
+  .week-title { font-size: 13px; color: var(--text); }
+
+  /* GRILLE JOURS */
+  .week-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    border: 0.5px solid var(--border); border-radius: 0 0 10px 10px; overflow: hidden;
+  }
+  .day-col { border-right: 0.5px solid var(--border); }
+  .day-col:last-child { border-right: none; }
+  .day-head {
+    background: var(--surface2); padding: 6px 8px; text-align: center;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted); border-bottom: 0.5px solid var(--border);
+  }
+  .day-cell {
+    background: var(--surface); padding: 8px; font-size: 11px;
+    color: #a8b0c8; line-height: 1.5; white-space: pre-line; min-height: 60px;
+  }
+  .day-cell.repos { color: rgba(122,128,153,0.4); font-style: italic; }
+  .day-cell.course { background: rgba(252,76,2,0.08); color: #fc7c42; font-weight: 600; }
+  .day-cell.recup { background: rgba(79,142,247,0.06); }
+
+  /* NOTE COACHDAV */
+  .week-note {
+    font-size: 11px; color: var(--muted); padding: 8px 14px;
+    background: rgba(252,76,2,0.04); border: 0.5px solid var(--border);
+    border-top: none; border-radius: 0 0 10px 10px; line-height: 1.6;
+  }
+
+  /* SUIVI */
+  .suivi-section { margin-top: 32px; }
+  .suivi-title {
+    font-size: 14px; font-weight: 600; color: var(--text);
+    margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+  }
+
+  /* Vue adhérent : saisie par semaine */
+  .suivi-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    border: 0.5px solid var(--border); border-radius: 10px; overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .suivi-day {
+    border-right: 0.5px solid var(--border); background: var(--surface);
+  }
+  .suivi-day:last-child { border-right: none; }
+  .suivi-day-head {
+    background: var(--surface2); padding: 6px 4px; text-align: center;
+    font-size: 10px; font-weight: 700; color: var(--muted);
+    border-bottom: 0.5px solid var(--border); text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .suivi-day-body { padding: 6px 4px; }
+  .suivi-select {
+    width: 100%; background: var(--surface2); border: 0.5px solid var(--border);
+    border-radius: 5px; padding: 4px 2px; color: var(--text);
+    font-family: 'Outfit', sans-serif; font-size: 10px; outline: none; margin-bottom: 4px;
+    cursor: pointer;
+  }
+  .suivi-input {
+    width: 100%; background: var(--surface2); border: 0.5px solid var(--border);
+    border-radius: 5px; padding: 4px 5px; color: var(--text);
+    font-family: 'Outfit', sans-serif; font-size: 10px; outline: none; margin-bottom: 3px;
+  }
+  .suivi-input::placeholder { color: var(--muted); }
+  .btn-save-suivi {
+    padding: 7px 18px; border-radius: 8px; border: none;
+    background: var(--accent); color: #fff;
+    font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: opacity 0.2s; margin-top: 6px;
+  }
+  .btn-save-suivi:hover { opacity: 0.9; }
+  .cumul-bar {
+    background: var(--surface); border: 0.5px solid var(--border); border-radius: 8px;
+    padding: 8px 14px; font-size: 12px; color: var(--muted); margin-top: 6px;
+    display: flex; gap: 20px;
+  }
+  .cumul-bar strong { color: var(--text); }
+
+  /* Vue CoachDav : tableau récap */
+  .recap-table-wrap { overflow-x: auto; border-radius: 10px; border: 0.5px solid var(--border); margin-bottom: 20px; }
+  .recap-table { width: 100%; border-collapse: collapse; font-size: 12px; background: var(--surface); min-width: 800px; }
+  .recap-table th {
+    background: var(--surface2); color: var(--muted); font-size: 10px; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase; padding: 8px 10px; text-align: center;
+    border-bottom: 0.5px solid var(--border); white-space: nowrap;
+  }
+  .recap-table td { padding: 7px 10px; text-align: center; border-bottom: 0.5px solid rgba(255,255,255,0.04); color: var(--text); }
+  .recap-table tr:last-child td { border-bottom: none; }
+  .recap-table .td-name { text-align: left; font-weight: 600; color: var(--text); }
+  .recap-table .td-plan { color: var(--accent); font-size: 10px; font-weight: 600; }
+  .emoji-cell { font-size: 14px; }
+
+  .tab-btns { display: flex; gap: 8px; margin-bottom: 16px; }
+  .tab-btn {
+    padding: 7px 16px; border-radius: 8px; border: 0.5px solid var(--border);
+    background: var(--surface); color: var(--muted); cursor: pointer;
+    font-family: 'Outfit', sans-serif; font-size: 13px; transition: all 0.2s;
+  }
+  .tab-btn.active { background: var(--surface2); border-color: var(--accent); color: var(--text); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: var(--surface2); border: 0.5px solid rgba(34,197,94,0.4);
+    border-radius: 10px; padding: 12px 20px; font-size: 13px; color: var(--green);
+    transition: transform 0.3s ease; z-index: 100; white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.error { border-color: rgba(224,0,32,0.4); color: #ff6b6b; }
+
+  @media (max-width: 800px) {
+    .week-grid, .suivi-grid { grid-template-columns: repeat(4, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon"><img src="data:image/png;base64,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" alt="GGT"></div>
+    <div>
+      <h1>Plan de course 2026</h1>
+      <p>Génépi Groupe Trail · CoachDav</p>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+    <span id="user-name" style="font-size:13px;color:var(--muted)"></span>
+    <a href="planning.html" class="btn-head">← Retour planning</a>
+    <button class="btn-head" onclick="logout()">Déconnexion</button>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- CHOIX DU PLAN -->
+  <div class="plan-chooser">
+    <label>Mon plan :</label>
+    <button class="plan-btn" id="btn-a" onclick="choosePlan('A')">🏔 Plan A — ½ Barjo 50km</button>
+    <button class="plan-btn" id="btn-b" onclick="choosePlan('B')">🏃 Plan B — Trail des Tours 28km</button>
+    <button class="plan-btn" id="btn-c" onclick="choosePlan('C')">🎯 Plan C — Trail des Tours 15km</button>
+    <span class="plan-desc" id="plan-desc">Sélectionne ton plan pour afficher ton programme</span>
+  </div>
+
+  <!-- ONGLETS PLAN / SUIVI -->
+  <div class="tab-btns">
+    <button class="tab-btn active" onclick="showTab('tab-plan', this)">📋 Plan d'entraînement</button>
+    <button class="tab-btn" onclick="showTab('tab-suivi', this)">📊 Suivi sensations</button>
+    <button class="tab-btn" id="btn-recap" style="display:none" onclick="showTab('tab-recap', this)">👁 Vue CoachDav</button>
+  </div>
+
+  <!-- PLAN -->
+  <div class="tab-panel active" id="tab-plan">
+    <div id="plan-content">
+      <p style="color:var(--muted);font-size:14px;padding:40px 0;text-align:center;">👆 Sélectionne ton plan ci-dessus pour afficher ton programme</p>
+    </div>
+  </div>
+
+  <!-- SUIVI ADHÉRENT -->
+  <div class="tab-panel" id="tab-suivi">
+    <div id="suivi-content">
+      <p style="color:var(--muted);font-size:14px;padding:40px 0;text-align:center;">👆 Sélectionne ton plan pour accéder à ton suivi</p>
+    </div>
+  </div>
+
+  <!-- RECAP COACHDAV -->
+  <div class="tab-panel" id="tab-recap">
+    <div id="recap-content">
+      <p style="color:var(--muted);font-size:13px;padding:20px 0;">Chargement du récapitulatif...</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (id === 'tab-recap') loadRecap();
+}
+</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC7a3obsTgqf5An8v1t8fpQWCln-ZbZWpk",
+  authDomain: "ggt-planning-30503.firebaseapp.com",
+  projectId: "ggt-planning-30503",
+  storageBucket: "ggt-planning-30503.firebasestorage.app",
+  messagingSenderId: "172309807991",
+  appId: "1:172309807991:web:6a66ce809970c10c375772"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUid = null;
+let currentPlan = null;
+let isAdmin = false;
+let userName = '';
+
+const PLAN_DATA = {"PHASE 1 — FONCIER": {"info": {"label": "Phase 1 — Foncier & Bases", "period": "23 mars → 19 avril 2026", "color": "#22c55e"}, "weeks": [{"num": "S1", "title": "Mise en route · régularité avant tout", "dates": ["23/03", "24/03", "25/03", "26/03", "27/03", "28/03", "29/03"], "planA": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 20' (EF)\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 12×1' r1' (90-95% VMA)\n+ RAC 10'", "Repos", "Footing 50' (70% VMA)", "1h30-1h40 · TV D+"], "planBC": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 20' (EF)\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 10×1' r1' (90-95% VMA)\n+ RAC 10'", "Repos", "Footing 50' (70%VMA) PlanB\n\nRepos Plan C", "1h30-1h40 · TV"], "note": ""}, {"num": "S2", "title": "Consolidation · légère montée de volume", "dates": ["30/03", "31/03", "01/04", "02/04", "03/04", "04/04", "05/04"], "planA": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 8×côte CE / CCE\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 3×8' r3' (80-85% VMA)\n+ Récupération 10'", "Repos", "Footing 50' (70% VMA) TV", "1h45-2h · TV D+"], "planBC": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 6×côte CE / CCE\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 2×8' r3' (80-85% VMA)\n+ Récupération 10'", "Repos", "Footing 50' (70%VMA) PlanB\n\nRepos Plan C", "1h30-1h40 · TV"], "note": ""}, {"num": "S3", "title": "Charge progressive · intro dénivelé", "dates": ["06/04", "07/04", "08/04", "09/04", "10/04", "11/04", "12/04"], "planA": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 10×côte CB / CE + relance en accélération sur 100m\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ single A/R TD7H\n+ RAC 10'", "Repos\nou \nFooting 50' (70%VMA)\nsi bien récupérerr de la séance de jeudi", "2h00 · 300-400m D+", "Bénévoles\n\nLa Méran'Trail"], "planBC": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 8×côte CB / CE + relance en accélération sur 100m\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ single A TD7H\n+ RAC 10'", "Repos\nou \nFooting 50' (70%VMA)\nsi bien récupérerr de la séance de jeudi", "1h30-1h40 · TV D+", "Bénévoles\n\nLa Méran'Trail"], "note": ""}, {"num": "S4", "title": "⚡ Semaine de récupération — Volume -30% pour TOUS", "dates": ["13/04", "14/04", "15/04", "16/04", "17/04", "18/04", "19/04"], "planA": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 2×(12×30'' r30'')\nR3' (95-100% VMA)\n+ RAC 10'", "Repos", "Footing 1h (55-65% VMA)", "Repos", "Repos", "1h20 · plat"], "planBC": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 2×(10×30'' r30'')\nR3' (95-100% VMA)\n+ RAC 10'", "Repos", "Footing 1h (55-65% VMA)", "Repos", "Repos", "1h20 · plat"], "note": "💬 Note CoachDav : Semaine récup = investissement. Le corps digère les 3 semaines de charge. Jambes lourdes en début de semaine → normal, c'est exactement pour ça qu'on récupère."}]}, "PHASE 2 — DÉVELOPPEMENT": {"info": {"label": "Phase 2 — Développement & Intensité", "period": "20 avril → 17 mai 2026", "color": "#f59e0b"}, "weeks": [{"num": "S5", "title": "Relance · montée d'intensité", "dates": ["20/04", "21/04", "22/04", "23/04", "24/04", "25/04", "26/04"], "planA": ["Repos\nou\nRenforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 10×côte CH / CCH + relance en accélération sur 100m\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 3×10' r3' (82-87% VMA)\n+ RAC 10'", "Repos", "Footing 60' (70% VMA) · TV", "2h10-2h20 TV\n400-500m D+"], "planBC": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 7×côte CH / CCH + relance en accélération sur 100m\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 2×10' r3' (82-87% VMA)\n+ RAC 10'", "Repos", "Footing 50' (70%VMA) PlanB\n\nRepos Plan C", "1h35-1h45 TV\n250-300m D+"], "note": ""}, {"num": "S6", "title": "Charge · séances qualité", "dates": ["27/04", "28/04", "29/04", "30/04", "01/05", "02/05", "03/05"], "planA": ["Repos\nou\nRenforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 10×1' côte CB / GOR\nR descente trot\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 6×4' r1'30 (88-93% VMA)\n+ RAC 10'", "Repos", "Footing 50' (70% VMA) · TP", "2h20-2h30 TV\n500-600m D+"], "planBC": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 6 à 8×1' côte CB / GOR\nR descente trot\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 5×4' r1'30 (88-93% VMA)\n+ RAC 10'", "Repos", "Footing 50' (70%VMA) PlanB\n\nRepos Plan C", "1h40-1h50 TV\n300-350m D+"], "note": ""}, {"num": "S7", "title": "Charge maximale phase 2 · test ravitaillement", "dates": ["04/05", "05/05", "06/05", "07/05", "08/05", "09/05", "10/05"], "planA": ["Repos\nou\nRenforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 10×côte CE / CCE + relance en accélération sur 100m\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ single A/R/A TD7H\n+ RAC 10'", "Repos", "Footing 1h (70% VMA) · TV", "2h30-2h45 TV\n600-700m D+\nTester gel, boisson, barre"], "planBC": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 6×côte CE / CCE + relance en accélération sur 100m\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ single A/R TD7H\n+ RAC 10'", "Repos", "Footing 50' (70%VMA) PlanB\n\nRepos Plan C", "1h45-2h TV\n300m D+"], "note": ""}, {"num": "S8", "title": "⚡ Récupération pré-stage · arriver frais à Valloire", "dates": ["11/05", "12/05", "13/05", "14/05", "15/05", "16/05", "17/05"], "planA": ["Repos", "Repos\nou\nFooting 45' (55-65% VMA)", "🚗 Route Valloire\nTrajet · installation · dîner · repos · coucher tôt", "Sortie J1 - G1", "Sortie J2 - G1", "Sortie J3 - G1", "🏠 Retour · repos · sommeil ++"], "planBC": ["Repos", "Repos\nou\nFooting 45' (55-65% VMA)", "🚗 Route Valloire\nTrajet · installation · dîner · repos · coucher tôt", "Sortie J1 - G2", "Sortie J2 - G2", "Sortie J3 - G2", "🏠 Retour · repos · sommeil ++"], "note": "💬 Le repos fait partie intégrante du programme, au même titre que l'exercice ; il est tout aussi essentiel. Ne le négligez pas."}]}, "PHASE 3 — TRAIL DES TOURS": {"info": {"label": "Phase 3 — Post-Valloire & Trail des Tours", "period": "18 mai → 31 mai 2026", "color": "#4f8ef7"}, "weeks": [{"num": "S9", "title": "Récupération post-stage · affûtage Trail des Tours", "dates": ["18/05", "19/05", "20/05", "21/05", "22/05", "23/05", "24/05"], "planA": ["Repos\n\nPlanifier un RDV chez l'OSTEO", "Footing 1h (55-65% VMA)", "Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 2×8' r3' (82-85% VMA)\n+ RAC 10'", "Repos", "Footing 50' (70% VMA) · TV", "1h45-2h · 300-400m D+\nallure Trail des Tours"], "planBC": ["Repos\n\nPlanifier un RDV chez l'OSTEO", "Footing 1h (55-65% VMA)", "Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 2×6' r3' (82-85% VMA)\n+ RAC 10'", "Repos", "Footing 50' (70%VMA)", "1h30 dont 2×10' r3'\nallure Trail des Tours"], "note": ""}, {"num": "S10", "title": "🎯 Semaine Trail des Tours · affûtage final", "dates": ["25/05", "26/05", "27/05", "28/05", "29/05", "30/05", "31/05"], "planA": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 4×20'' accélérations\n+ RAC 10'", "Repos", "Repos", "Repos", "Trot réveil 20-25'\n65% VMA · activer les jambes\nDormir tôt · hydratation max", "🎯 Trail des Tours · 28km\n28km / 300m D+\nMontfort-l'Amaury\n⚠ galop d'essai → 80-85% max\nTester nutrition + matériel pour la Barjo"], "planBC": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 4×20'' accélérations\n+ RAC 10'\n\nou REPOS", "Repos", "Repos", "Repos", "Trot réveil 20-25'\n65% VMA · activer les jambes\nDormir tôt · hydratation max", "🏆 Trail des Tours · 28km\n28km / 300m D+\nMontfort-l'Amaury\nC'est VOTRE course !"], "note": "💬 Plan A → galop d'essai, pas une guerre. La vraie bataille c'est le 21 juin ! / Plan B → votre objectif, courez selon vos sensations ! / Plan C → le 15km se court plus vite, gérez dès le km 1. Bonne course à tous ! 🎉"}]}, "PHASE 4 — BARJO (Plan A)": {"info": {"label": "Phase 4 — Affûtage Barjo (Plan A)", "period": "1 → 21 juin 2026", "color": "#fc4c02"}, "weeks": [{"num": "S11", "title": "Récupération Trail des Tours · relance Barjo", "dates": ["01/06", "02/06", "03/06", "04/06", "05/06", "06/06", "07/06"], "planA": ["Repos complet", "Footing 1h (55-65% VMA)", "Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 8×1' r1' (90-95% VMA)\n+ RAC 10'", "Repos", "Footing 45' (70% VMA) · TV", "2h30 TV\n700m D+\n30' allure Barjo cible en milieu"], "planBC": ["Félicitations ! 🎉\nTrail des Tours terminé", "Repos", "Repos", "Repos", "Repos", "Repos", "Repos"], "note": ""}, {"num": "S12", "title": "Affûtage · volume en baisse, qualité maintenue", "dates": ["08/06", "09/06", "10/06", "11/06", "12/06", "13/06", "14/06"], "planA": ["Repos\n\nPlanifier un RDV chez l'OSTEO", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 2×8' r3' (82-85% VMA)\n+ RAC 10'", "Repos", "Footing 1h (55-65% VMA)", "Repos", "Footing 40' (55-65% VMA)\n + 4×20'' accélérations\n+ RAC 10'", "1h30 TV\n200-300m D+"], "planBC": ["Repos", "Repos", "Repos", "Repos", "Repos", "Repos", "Repos"], "note": ""}, {"num": "S13", "title": "🎯 SEMAINE BARJO · Dernière ligne droite", "dates": ["15/06", "16/06", "17/06", "18/06", "19/06", "20/06", "21/06"], "planA": ["Repos", "Repos", "Repos", "Repos", "Repos", "Trot réveil 20-25'\n65% VMA · activer les jambes\nDormir tôt · hydratation max", "🎯 ½ BARJO TRAIL\n50km / 1200m D+\nDépart 10h00\nBarrière horaire max 8h20"], "planBC": ["Repos", "Repos", "Repos", "Repos", "Repos", "Repos", "Repos"], "note": "💬 Matériel obligatoire Barjo : Dossard visible · Couverture de survie · Sifflet · Téléphone chargé · Eau 500ml min · Coupe-vent. Bâtons autorisés."}]}};
+
+const JOURS = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+const SENSATIONS = [
+  { val: '', label: '— Repos' },
+  { val: '😊', label: '😊 Très facile' },
+  { val: '🙂', label: '🙂 Facile' },
+  { val: '😐', label: '😐 Normal' },
+  { val: '😓', label: '😓 Difficile' },
+  { val: '😰', label: '😰 Très difficile' },
+];
+
+const PLAN_DESCS = {
+  'A': '🏔 Plan A — ½ Barjo 50km / 1200m D+ · 21 juin 2026',
+  'B': '🏃 Plan B — Trail des Tours 28km / 300m D+ · 31 mai 2026',
+  'C': '🎯 Plan C — Trail des Tours 15km / 120m D+ · 31 mai 2026',
+};
+
+function showToast(msg, isError=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show' + (isError?' error':'');
+  setTimeout(()=>t.className='toast'+(isError?' error':''), 3000);
+}
+
+function getDayClass(text) {
+  if (!text || text === 'Repos' || text.toLowerCase() === 'repos') return 'repos';
+  if (text.includes('BARJO') || text.includes('Trail des Tours') || text.includes('🎯') || text.includes('🏆')) return 'course';
+  if (text.includes('Récupération') || text.includes('récup') || text.includes('Repos complet')) return 'recup';
+  return '';
+}
+
+function buildPlanHTML(plan) {
+  let html = '';
+  const phaseColors = {
+    'PHASE 1 — FONCIER': '#22c55e',
+    'PHASE 2 — DÉVELOPPEMENT': '#f59e0b',
+    'PHASE 3 — TRAIL DES TOURS': '#4f8ef7',
+    'PHASE 4 — BARJO (Plan A)': '#fc4c02',
+  };
+
+  for (const [phaseName, phaseObj] of Object.entries(PLAN_DATA)) {
+    // Phase 4 seulement pour Plan A
+    if (phaseName.includes('BARJO') && plan !== 'A') continue;
+
+    const color = phaseColors[phaseName] || '#4f8ef7';
+    html += `<div class="phase-block">
+      <div class="phase-header" style="background:rgba(${hexToRgb(color)},0.06);border-color:rgba(${hexToRgb(color)},0.2)">
+        <div class="phase-dot" style="background:${color}"></div>
+        <span class="phase-title">${phaseObj.info.label}</span>
+        <span class="phase-period">${phaseObj.info.period}</span>
+      </div>`;
+
+    for (const week of phaseObj.weeks) {
+      const days = plan === 'A' ? week.planA : week.planBC;
+      html += `<div class="week-block">
+        <div class="week-header">
+          <span class="week-num">${week.num}</span>
+          <span class="week-title">${week.title}</span>
+        </div>
+        <div class="week-grid">`;
+
+      for (let i = 0; i < 7; i++) {
+        const dateStr = week.dates[i] || '';
+        const content = days[i] || 'Repos';
+        const cls = getDayClass(content);
+        html += `<div class="day-col">
+          <div class="day-head">${JOURS[i]}<br><span style="font-size:9px;font-weight:400;opacity:0.7">${dateStr}</span></div>
+          <div class="day-cell ${cls}">${content}</div>
+        </div>`;
+      }
+
+      html += `</div>`;
+      if (week.note) {
+        html += `<div class="week-note">${week.note}</div>`;
+      }
+      html += `</div>`;
+    }
+
+    html += `</div>`;
+  }
+  return html;
+}
+
+function buildSuiviHTML(plan, savedData) {
+  let html = `<p style="font-size:13px;color:var(--muted);margin-bottom:16px;">
+    Remplis tes sensations, distance et D+ après chaque séance. Tes données sont sauvegardées automatiquement.
+  </p>`;
+
+  let weekNum = 0;
+  for (const [phaseName, phaseObj] of Object.entries(PLAN_DATA)) {
+    if (phaseName.includes('BARJO') && plan !== 'A') continue;
+    for (const week of phaseObj.weeks) {
+      weekNum++;
+      const wKey = `week_${week.num || weekNum}`;
+      const wData = savedData[wKey] || {};
+
+      let cumKm = 0, cumDp = 0;
+      for (let i = 0; i < 7; i++) {
+        cumKm += parseFloat(wData[`km_${i}`] || 0);
+        cumDp += parseFloat(wData[`dp_${i}`] || 0);
+      }
+
+      html += `<div style="margin-bottom:20px;">
+        <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px;padding:6px 10px;background:var(--surface);border-radius:8px;">
+          ${week.num} — ${week.title}
+        </div>
+        <div class="suivi-grid">`;
+
+      for (let i = 0; i < 7; i++) {
+        const dateStr = week.dates[i] || JOURS[i];
+        const sens = wData[`sens_${i}`] || '';
+        const km = wData[`km_${i}`] || '';
+        const dp = wData[`dp_${i}`] || '';
+        const opts = SENSATIONS.map(s => `<option value="${s.val}" ${s.val===sens?'selected':''}>${s.label}</option>`).join('');
+
+        html += `<div class="suivi-day">
+          <div class="suivi-day-head">${JOURS[i]}<br><span style="font-size:8px;opacity:0.7">${dateStr}</span></div>
+          <div class="suivi-day-body">
+            <select class="suivi-select" id="sens_${wKey}_${i}">${opts}</select>
+            <input class="suivi-input" type="number" step="0.1" min="0" placeholder="km" id="km_${wKey}_${i}" value="${km}">
+            <input class="suivi-input" type="number" step="10" min="0" placeholder="D+" id="dp_${wKey}_${i}" value="${dp}">
+          </div>
+        </div>`;
+      }
+
+      html += `</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+          <div class="cumul-bar">
+            Cumul semaine : <strong>${cumKm.toFixed(1)} km</strong> · <strong>${Math.round(cumDp)} m D+</strong>
+          </div>
+          <button class="btn-save-suivi" onclick="saveSuivi('${wKey}', ${weekNum-1})">💾 Sauvegarder</button>
+        </div>`;
+      html += `</div>`;
+    }
+  }
+  return html;
+}
+
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `${r},${g},${b}`;
+}
+
+window.choosePlan = async function(plan) {
+  currentPlan = plan;
+  document.querySelectorAll('.plan-btn').forEach(b => b.className = 'plan-btn');
+  const cls = plan === 'A' ? 'active-a' : plan === 'B' ? 'active-b' : 'active-c';
+  document.getElementById('btn-' + plan.toLowerCase()).classList.add(cls);
+  document.getElementById('plan-desc').textContent = PLAN_DESCS[plan];
+
+  // Sauvegarder le choix
+  if (currentUid) {
+    await setDoc(doc(db, 'users', currentUid), { plan_course: plan }, { merge: true });
+  }
+
+  // Charger données suivi
+  let savedData = {};
+  if (currentUid) {
+    try {
+      const snap = await getDoc(doc(db, 'suivi_course', currentUid));
+      if (snap.exists()) savedData = snap.data();
+    } catch(e) {}
+  }
+
+  document.getElementById('plan-content').innerHTML = buildPlanHTML(plan);
+  document.getElementById('suivi-content').innerHTML = buildSuiviHTML(plan, savedData);
+};
+
+window.saveSuivi = async function(wKey, weekIdx) {
+  if (!currentUid) return;
+  const data = {};
+  for (let i = 0; i < 7; i++) {
+    data[`sens_${wKey}_${i}`] = document.getElementById(`sens_${wKey}_${i}`)?.value || '';
+    data[`km_${wKey}_${i}`] = document.getElementById(`km_${wKey}_${i}`)?.value || '';
+    data[`dp_${wKey}_${i}`] = document.getElementById(`dp_${wKey}_${i}`)?.value || '';
+  }
+  // Recalculer cumul
+  let cumKm = 0, cumDp = 0;
+  for (let i = 0; i < 7; i++) {
+    cumKm += parseFloat(data[`km_${wKey}_${i}`] || 0);
+    cumDp += parseFloat(data[`dp_${wKey}_${i}`] || 0);
+  }
+  data[`cumul_km_${wKey}`] = cumKm.toFixed(1);
+  data[`cumul_dp_${wKey}`] = Math.round(cumDp);
+
+  try {
+    await setDoc(doc(db, 'suivi_course', currentUid), data, { merge: true });
+    showToast('✓ Suivi sauvegardé !');
+  } catch(e) { showToast('Erreur de sauvegarde', true); }
+};
+
+window.loadRecap = async function() {
+  if (!isAdmin) return;
+  const recapDiv = document.getElementById('recap-content');
+  recapDiv.innerHTML = '<p style="color:var(--muted);font-size:13px;">Chargement...</p>';
+
+  try {
+    // Récupérer tous les utilisateurs
+    const usersSnap = await getDocs(collection(db, 'users'));
+    const users = [];
+    usersSnap.forEach(d => {
+      const data = d.data();
+      if (data.role !== 'admin') {
+        users.push({ uid: d.id, prenom: data.prenom || '', nom: data.nom || '', plan: data.plan_course || '?' });
+      }
+    });
+
+    if (!users.length) {
+      recapDiv.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:20px 0;">Aucun adhérent enregistré.</p>';
+      return;
+    }
+
+    // Récupérer tous les suivis
+    const suivis = {};
+    for (const u of users) {
+      try {
+        const snap = await getDoc(doc(db, 'suivi_course', u.uid));
+        suivis[u.uid] = snap.exists() ? snap.data() : {};
+      } catch(e) { suivis[u.uid] = {}; }
+    }
+
+    // Construire tableau récap par semaine
+    let html = '';
+    let weekNum = 0;
+    for (const [phaseName, phaseObj] of Object.entries(PLAN_DATA)) {
+      html += `<h3 style="font-size:13px;color:var(--muted);margin:20px 0 10px;text-transform:uppercase;letter-spacing:0.06em;">${phaseObj.info.label}</h3>`;
+
+      for (const week of phaseObj.weeks) {
+        weekNum++;
+        const wKey = `week_${week.num || weekNum}`;
+
+        html += `<div class="recap-table-wrap" style="margin-bottom:16px;">
+          <table class="recap-table">
+            <thead>
+              <tr>
+                <th style="text-align:left">Adhérent</th>
+                <th>Plan</th>
+                ${''.concat(...JOURS.map((j,i) => `<th>${j}<br><span style="font-weight:400;opacity:0.7;font-size:9px">${week.dates[i]||''}</span></th>`))}
+                <th>Cumul km</th>
+                <th>Cumul D+</th>
+              </tr>
+            </thead>
+            <tbody>`;
+
+        for (const u of users) {
+          const sd = suivis[u.uid] || {};
+          const planLabel = u.plan === 'A' ? '<span style="color:#fc4c02">A</span>' : u.plan === 'B' ? '<span style="color:#4f8ef7">B</span>' : u.plan === 'C' ? '<span style="color:#22c55e">C</span>' : '?';
+          const cumKm = sd[`cumul_km_${wKey}`] || '0';
+          const cumDp = sd[`cumul_dp_${wKey}`] || '0';
+
+          html += `<tr>
+            <td class="td-name">${u.prenom} ${u.nom}</td>
+            <td class="td-plan">${planLabel}</td>`;
+
+          for (let i = 0; i < 7; i++) {
+            const sens = sd[`sens_${wKey}_${i}`] || '';
+            const km = sd[`km_${wKey}_${i}`] || '';
+            const dp = sd[`dp_${wKey}_${i}`] || '';
+            const title = [sens, km ? km+'km' : '', dp ? dp+'D+' : ''].filter(Boolean).join(' · ');
+            html += `<td title="${title}" style="cursor:default">
+              <div class="emoji-cell">${sens || '—'}</div>
+              ${km ? `<div style="font-size:10px;color:var(--muted)">${km}km</div>` : ''}
+            </td>`;
+          }
+
+          html += `<td style="color:var(--accent);font-weight:600">${cumKm} km</td>
+            <td style="color:var(--muted)">${cumDp} m</td>
+          </tr>`;
+        }
+
+        html += `</tbody></table></div>`;
+      }
+    }
+    recapDiv.innerHTML = html;
+  } catch(e) {
+    recapDiv.innerHTML = '<p style="color:#ff6b6b;font-size:13px;">Erreur de chargement.</p>';
+  }
+};
+
+window.logout = () => signOut(auth).then(() => window.location.href = 'index.html');
+
+let redirecting = false;
+onAuthStateChanged(auth, async (user) => {
+  if (redirecting) return;
+  if (!user) { redirecting = true; window.location.href = 'index.html'; return; }
+  currentUid = user.uid;
+  try {
+    const snap = await getDoc(doc(db, 'users', user.uid));
+    const data = snap.exists() ? snap.data() : {};
+    const prenom = data.prenom || '';
+    const nom = data.nom || '';
+    document.getElementById('user-name').textContent = [prenom, nom].filter(Boolean).join(' ') || user.email;
+    isAdmin = data.role === 'admin';
+    if (isAdmin) document.getElementById('btn-recap').style.display = 'block';
+    // Charger le plan choisi précédemment
+    if (data.plan_course) {
+      window.choosePlan(data.plan_course);
+    }
+  } catch(e) {}
+});
+</script>
+</body>
+</html>

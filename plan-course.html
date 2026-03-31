@@ -441,12 +441,10 @@ window._choosePlan = async function(plan) {
   document.getElementById('btn-' + plan.toLowerCase()).classList.add(cls);
   document.getElementById('plan-desc').textContent = PLAN_DESCS[plan];
 
-  // Sauvegarder le choix
-  if (currentUid) {
-    await setDoc(doc(db, 'users', currentUid), { plan_course: plan }, { merge: true });
-  }
+  // Afficher le plan immédiatement sans attendre Firebase
+  document.getElementById('plan-content').innerHTML = buildPlanHTML(plan);
 
-  // Charger données suivi
+  // Charger données suivi depuis Firebase
   let savedData = {};
   if (currentUid) {
     try {
@@ -454,9 +452,14 @@ window._choosePlan = async function(plan) {
       if (snap.exists()) savedData = snap.data();
     } catch(e) {}
   }
-
-  document.getElementById('plan-content').innerHTML = buildPlanHTML(plan);
   document.getElementById('suivi-content').innerHTML = buildSuiviHTML(plan, savedData);
+
+  // Sauvegarder le choix dans suivi_course (accessible à tous les adhérents)
+  if (currentUid) {
+    try {
+      await setDoc(doc(db, 'suivi_course', currentUid), { _plan_choice: plan }, { merge: true });
+    } catch(e) {}
+  }
 };
 
 window._saveSuivi = async function(wKey, weekIdx) {
@@ -585,11 +588,18 @@ onAuthStateChanged(auth, async (user) => {
     document.getElementById('user-name').textContent = [prenom, nom].filter(Boolean).join(' ') || user.email;
     isAdmin = data.role === 'admin';
     if (isAdmin) document.getElementById('btn-recap').style.display = 'block';
-    // Charger le plan choisi précédemment
-    if (data.plan_course) {
-      window._choosePlan(data.plan_course);
+    // Lire le plan depuis suivi_course (accessible à tous les adhérents)
+    let planChoisi = data.plan_course || null;
+    try {
+      const scSnap = await getDoc(doc(db, 'suivi_course', user.uid));
+      if (scSnap.exists() && scSnap.data()._plan_choice) {
+        planChoisi = scSnap.data()._plan_choice;
+      }
+    } catch(e2) {}
+    if (planChoisi) {
+      window._choosePlan(planChoisi);
     }
-  } catch(e) {}
+  } catch(e) { console.error(e); }
 });
 </script>
 </body>

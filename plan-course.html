@@ -261,6 +261,13 @@ function showTab(id, btn) {
 }
 </script>
 
+<script>
+// Bridges accessibles depuis les onclick HTML
+function choosePlan(plan) { if (window._choosePlan) window._choosePlan(plan); }
+function saveSuivi(wKey, weekIdx) { if (window._saveSuivi) window._saveSuivi(wKey, weekIdx); }
+function loadRecap() { if (window._loadRecap) window._loadRecap(); }
+</script>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -378,12 +385,10 @@ function buildSuiviHTML(plan, savedData) {
     for (const week of phaseObj.weeks) {
       weekNum++;
       const wKey = `week_${week.num || weekNum}`;
-      const wData = savedData[wKey] || {};
-
       let cumKm = 0, cumDp = 0;
       for (let i = 0; i < 7; i++) {
-        cumKm += parseFloat(wData[`km_${i}`] || 0);
-        cumDp += parseFloat(wData[`dp_${i}`] || 0);
+        cumKm += parseFloat(savedData[`km_${wKey}_${i}`] || 0);
+        cumDp += parseFloat(savedData[`dp_${wKey}_${i}`] || 0);
       }
 
       html += `<div style="margin-bottom:20px;">
@@ -394,9 +399,9 @@ function buildSuiviHTML(plan, savedData) {
 
       for (let i = 0; i < 7; i++) {
         const dateStr = week.dates[i] || JOURS[i];
-        const sens = wData[`sens_${i}`] || '';
-        const km = wData[`km_${i}`] || '';
-        const dp = wData[`dp_${i}`] || '';
+        const sens = savedData[`sens_${wKey}_${i}`] || '';
+        const km = savedData[`km_${wKey}_${i}`] || '';
+        const dp = savedData[`dp_${wKey}_${i}`] || '';
         const opts = SENSATIONS.map(s => `<option value="${s.val}" ${s.val===sens?'selected':''}>${s.label}</option>`).join('');
 
         html += `<div class="suivi-day">
@@ -429,7 +434,7 @@ function hexToRgb(hex) {
   return `${r},${g},${b}`;
 }
 
-window.choosePlan = async function(plan) {
+window._choosePlan = async function(plan) {
   currentPlan = plan;
   document.querySelectorAll('.plan-btn').forEach(b => b.className = 'plan-btn');
   const cls = plan === 'A' ? 'active-a' : plan === 'B' ? 'active-b' : 'active-c';
@@ -454,7 +459,7 @@ window.choosePlan = async function(plan) {
   document.getElementById('suivi-content').innerHTML = buildSuiviHTML(plan, savedData);
 };
 
-window.saveSuivi = async function(wKey, weekIdx) {
+window._saveSuivi = async function(wKey, weekIdx) {
   if (!currentUid) return;
   const data = {};
   for (let i = 0; i < 7; i++) {
@@ -477,7 +482,7 @@ window.saveSuivi = async function(wKey, weekIdx) {
   } catch(e) { showToast('Erreur de sauvegarde', true); }
 };
 
-window.loadRecap = async function() {
+window._loadRecap = async function() {
   if (!isAdmin) return;
   const recapDiv = document.getElementById('recap-content');
   recapDiv.innerHTML = '<p style="color:var(--muted);font-size:13px;">Chargement...</p>';
@@ -582,7 +587,7 @@ onAuthStateChanged(auth, async (user) => {
     if (isAdmin) document.getElementById('btn-recap').style.display = 'block';
     // Charger le plan choisi précédemment
     if (data.plan_course) {
-      window.choosePlan(data.plan_course);
+      window._choosePlan(data.plan_course);
     }
   } catch(e) {}
 });

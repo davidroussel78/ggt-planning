@@ -491,28 +491,37 @@ window._loadRecap = async function() {
   recapDiv.innerHTML = '<p style="color:var(--muted);font-size:13px;">Chargement...</p>';
 
   try {
-    // Récupérer tous les utilisateurs
+    // Récupérer tous les utilisateurs (admin inclus)
     const usersSnap = await getDocs(collection(db, 'users'));
-    const users = [];
+    const allUsers = [];
     usersSnap.forEach(d => {
       const data = d.data();
-      if (data.role !== 'admin') {
-        users.push({ uid: d.id, prenom: data.prenom || '', nom: data.nom || '', plan: data.plan_course || '?' });
-      }
+      allUsers.push({ uid: d.id, prenom: data.prenom || '', nom: data.nom || '', plan: '?' });
     });
 
-    if (!users.length) {
-      recapDiv.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:20px 0;">Aucun adhérent enregistré.</p>';
-      return;
-    }
-
-    // Récupérer tous les suivis
+    // Récupérer les suivis et ne garder que ceux qui ont au moins une entrée
     const suivis = {};
-    for (const u of users) {
+    const users = [];
+    for (const u of allUsers) {
       try {
         const snap = await getDoc(doc(db, 'suivi_course', u.uid));
-        suivis[u.uid] = snap.exists() ? snap.data() : {};
-      } catch(e) { suivis[u.uid] = {}; }
+        if (snap.exists()) {
+          const sd = snap.data();
+          suivis[u.uid] = sd;
+          // Récupérer le plan depuis _plan_choice
+          u.plan = sd._plan_choice || '?';
+          // Vérifier si au moins une sensation ou km renseigné
+          const hasData = Object.keys(sd).some(k =>
+            (k.startsWith('sens_') || k.startsWith('km_')) && sd[k] !== '' && sd[k] !== undefined
+          );
+          if (hasData) users.push(u);
+        }
+      } catch(e) {}
+    }
+
+    if (!users.length) {
+      recapDiv.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:20px 0;">Aucun adhérent n'a encore rempli son suivi.</p>';
+      return;
     }
 
     // Construire tableau récap par semaine

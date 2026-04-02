@@ -262,10 +262,21 @@ function showTab(id, btn) {
 </script>
 
 <script>
-// Bridges accessibles depuis les onclick HTML
-function choosePlan(plan) { if (window._choosePlan) window._choosePlan(plan); }
-function saveSuivi(wKey, weekIdx) { if (window._saveSuivi) window._saveSuivi(wKey, weekIdx); }
-function loadRecap() { if (window._loadRecap) window._loadRecap(); }
+// File d'attente : si le module n'est pas encore prêt, on met en attente
+var _pendingPlan = null;
+function choosePlan(plan) {
+  if (window._choosePlan) {
+    window._choosePlan(plan);
+  } else {
+    _pendingPlan = plan;
+  }
+}
+function saveSuivi(wKey, weekIdx) {
+  if (window._saveSuivi) window._saveSuivi(wKey, weekIdx);
+}
+function loadRecap() {
+  if (window._loadRecap) window._loadRecap();
+}
 </script>
 
 <script type="module">
@@ -432,6 +443,15 @@ function hexToRgb(hex) {
   const g = parseInt(hex.slice(3,5),16);
   const b = parseInt(hex.slice(5,7),16);
   return `${r},${g},${b}`;
+}
+
+// Exécuter le plan en attente si l'utilisateur a cliqué avant que le module soit prêt
+function _flushPending() {
+  if (window._pendingPlan) {
+    const p = window._pendingPlan;
+    window._pendingPlan = null;
+    window._choosePlan(p);
+  }
 }
 
 window._choosePlan = async function(plan) {
@@ -607,9 +627,14 @@ onAuthStateChanged(auth, async (user) => {
     } catch(e2) {}
     if (planChoisi) {
       window._choosePlan(planChoisi);
+    } else {
+      _flushPending();
     }
   } catch(e) { console.error(e); }
 });
+
+// Aussi appeler flush si pas de plan sauvegardé
+setTimeout(_flushPending, 2000);
 </script>
 </body>
 </html>

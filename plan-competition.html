@@ -285,6 +285,26 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
   const SLBL  = ['— Repos','😊 Très facile','🙂 Facile','😐 Normal','😓 Difficile','😰 Très difficile'];
   const DIST_COLORS = ['#fc4c02','#4f8ef7','#22c55e','#f59e0b'];
 
+  // Formater une date en français lisible
+  function formatDateFR(dateStr) {
+    if (!dateStr) return '?';
+    let d;
+    // Si c'est déjà un objet Date sérialisé (ISO string)
+    if (String(dateStr).includes('T') || String(dateStr).includes('GMT')) {
+      d = new Date(dateStr);
+    } else {
+      // Format JJ/MM/AAAA
+      const parts = String(dateStr).split('/');
+      if (parts.length === 3) {
+        d = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+      } else {
+        return dateStr;
+      }
+    }
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  }
+
   // ── Utilitaires ──
   function toast(msg, type='ok') {
     const t = document.getElementById('toast');
@@ -377,7 +397,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
           <div class="comp-card-name">${c.nom}</div>
           <span class="comp-card-badge ${badgeCls}">${badgeTxt}</span>
         </div>
-        <div class="comp-card-date">📅 ${c.date_course} ${c.lieu ? '· 📍 '+c.lieu : ''}</div>
+        <div class="comp-card-date">📅 ${formatDateFR(c.date_course)} ${c.lieu ? '· 📍 '+c.lieu : ''}</div>
         <div class="comp-card-dists">${dists}</div>
         <div class="comp-card-meta">
           <span>${c.nb_semaines || '?'} semaines de préparation</span>
@@ -397,7 +417,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
     currentComp = {id: compId, ...snap.data()};
 
     document.getElementById('detail-name').textContent = currentComp.nom;
-    document.getElementById('detail-date').textContent = '📅 ' + currentComp.date_course + (currentComp.lieu ? ' · 📍 ' + currentComp.lieu : '');
+    document.getElementById('detail-date').textContent = '📅 ' + formatDateFR(currentComp.date_course) + (currentComp.lieu ? ' · 📍 ' + currentComp.lieu : '');
 
     // Afficher les boutons de distance
     const btns = document.getElementById('dist-buttons');
@@ -655,7 +675,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
         return `<div class="admin-comp-item">
           <div class="admin-comp-info">
             <div class="admin-comp-name">${c.nom} <span class="comp-card-badge ${badgeCls}" style="margin-left:8px">${badgeTxt}</span></div>
-            <div class="admin-comp-meta">📅 ${c.date_course} · ${(c.distances||[]).map(d=>d.label).join(' / ')} · ${c.nb_semaines||'?'} semaines</div>
+            <div class="admin-comp-meta">📅 ${formatDateFR(c.date_course)} · ${(c.distances||[]).map(d=>d.label).join(' / ')} · ${c.nb_semaines||'?'} semaines</div>
           </div>
           <div class="admin-comp-actions">
             ${c.status!=='published' ? `<button class="btn-success" onclick="publishComp('${c.id}')">▶ Publier</button>` : `<button class="btn-warn" onclick="unpublishComp('${c.id}')">⏸ Dépublier</button>`}
@@ -748,14 +768,24 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
 
     // Convertir date_debut en ISO
     let date_debut_iso = '';
+    let date_debut_fr = String(date_debut||'');
     if (date_debut) {
       if (date_debut instanceof Date) {
         date_debut_iso = date_debut.toISOString().split('T')[0];
+        const dd = date_debut;
+        date_debut_fr = String(dd.getDate()).padStart(2,'0')+'/'+String(dd.getMonth()+1).padStart(2,'0')+'/'+dd.getFullYear();
       } else {
-        // Format JJ/MM/AAAA
         const parts = String(date_debut).split('/');
-        if (parts.length===3) date_debut_iso = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+        if (parts.length===3) {
+          date_debut_iso = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+          date_debut_fr = String(date_debut);
+        }
       }
+    }
+    // Normaliser date_course
+    let date_course_fr = String(date_course||'');
+    if (date_course instanceof Date) {
+      date_course_fr = String(date_course.getDate()).padStart(2,'0')+'/'+String(date_course.getMonth()+1).padStart(2,'0')+'/'+date_course.getFullYear();
     }
 
     // ── Lire PLAN ──
@@ -764,7 +794,11 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
 
     const rows = XLSX.utils.sheet_to_json(ws2, {header:1, defval:''});
     // Les données commencent à la ligne 4 (index 3)
-    const dataRows = rows.slice(3).filter(r => r[0]); // col A = numéro semaine
+    const dataRows = rows.slice(3).filter(r => {
+      const a = String(r[0]||'').trim();
+      // Garder uniquement les lignes dont col A = S1, S2, S3... etc
+      return /^S\d+$/.test(a);
+    }); // col A = numéro semaine
 
     // Grouper par numéro de semaine
     const weeksMap = {};
@@ -788,8 +822,8 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
 
     const semaines = weekOrder.map(num => weeksMap[num]);
 
-    return { nom, date_course: String(date_course), lieu: String(lieu||''), notes: String(notes||''),
-             nb_semaines, date_debut: String(date_debut), date_debut_iso, distances, semaines,
+    return { nom, date_course: date_course_fr, lieu: String(lieu||''), notes: String(notes||''),
+             nb_semaines, date_debut: date_debut_fr, date_debut_iso, distances, semaines,
              status: 'draft', created_at: new Date().toISOString() };
   }
 

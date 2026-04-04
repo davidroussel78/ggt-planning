@@ -237,6 +237,28 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
         <div class="upload-title">Glisse ton fichier Excel ici</div>
         <div class="upload-hint">ou clique pour sélectionner — Format : GGT_Template_Plan_Course.xlsx</div>
       </div>
+      <!-- Rappel des règles -->
+      <div style="background:var(--surf);border:.5px solid var(--brd);border-radius:12px;padding:16px 20px;margin-bottom:20px;font-size:12px;line-height:1.8">
+        <div style="font-weight:700;color:var(--acc);margin-bottom:10px;font-size:13px">📋 Règles importantes</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <div style="color:var(--grn);font-weight:600;margin-bottom:4px">✅ Mettre à jour un plan</div>
+            <div style="color:var(--mut)">Modifie ton Excel, re-uploade avec le <strong style="color:var(--txt)">même nom de course</strong> → choisis "Mettre à jour" → suivis conservés</div>
+          </div>
+          <div>
+            <div style="color:var(--ora);font-weight:600;margin-bottom:4px">⚠ Ne jamais changer les distances</div>
+            <div style="color:var(--mut)">Sur un plan existant, ne modifie pas les distances (col A d'INFOS COURSE) — les suivis des adhérents seraient décalés</div>
+          </div>
+          <div>
+            <div style="color:var(--acc);font-weight:600;margin-bottom:4px">🆕 Nouveau plan</div>
+            <div style="color:var(--mut)">Nom de course différent = nouveau plan indépendant. Tu peux avoir plusieurs plans actifs simultanément</div>
+          </div>
+          <div>
+            <div style="color:var(--red);font-weight:600;margin-bottom:4px">🗑 Suppression</div>
+            <div style="color:var(--mut)">Supprimer un plan efface aussi tous les suivis. Préfère <strong style="color:var(--txt)">dépublier</strong> un plan terminé</div>
+          </div>
+        </div>
+      </div>
       <!-- Aperçu après lecture du fichier -->
       <div id="preview-area" style="display:none"></div>
     </div>
@@ -853,23 +875,69 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
         ).join('<br>') : 'Aucune semaine lue'}
       </div>
       ${plan.notes ? `<div style="font-size:12px;color:var(--mut);margin-bottom:14px;padding:10px;background:var(--surf2);border-radius:8px">💬 ${plan.notes}</div>` : ''}
-      <div class="preview-actions">
-        <button class="btn-success" onclick="importPlan('draft')">💾 Sauvegarder en brouillon</button>
-        <button class="btn-primary" onclick="importPlan('published')">▶ Importer et publier directement</button>
-        <button class="btn-h" onclick="cancelImport()">✕ Annuler</button>
+      <div id="preview-actions-area">
+        <div class="loading"><div class="spin"></div> Vérification...</div>
       </div>
     </div>`;
     area.style.display = 'block';
     document.getElementById('upload-zone').style.display = 'none';
+    // Vérifier si un plan avec ce nom existe déjà
+    checkExistingPlan(plan.nom);
   }
 
-  window.importPlan = async function(status) {
-    if (!parsedPlan) return;
-    parsedPlan.status = status;
+  async function checkExistingPlan(nom) {
+    const actionsDiv = document.getElementById('preview-actions-area');
     try {
-      const id = 'plan_' + Date.now();
-      await setDoc(doc(db,'race_plans',id), parsedPlan);
-      toast(status==='published' ? '✓ Plan publié !' : '✓ Plan sauvegardé en brouillon !');
+      const snap = await getDocs(collection(db,'race_plans'));
+      let existingId = null;
+      snap.forEach(d => {
+        if (d.data().nom === nom) existingId = d.id;
+      });
+      if (existingId) {
+        actionsDiv.innerHTML = `
+          <div style="background:rgba(245,158,11,.1);border:.5px solid rgba(245,158,11,.3);border-radius:10px;padding:14px;margin-bottom:14px">
+            <div style="color:var(--amb);font-weight:600;margin-bottom:6px">⚠ Un plan "${nom}" existe déjà</div>
+            <div style="font-size:12px;color:var(--mut)">Mettre à jour remplace les séances et conserve les suivis des adhérents.<br>Créer nouveau démarre un plan indépendant (suivis repartent à zéro).</div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn-warn" onclick="importPlan('update','${existingId}')">🔄 Mettre à jour le plan existant</button>
+            <button class="btn-success" onclick="importPlan('draft')">💾 Créer comme nouveau brouillon</button>
+            <button class="btn-h" onclick="cancelImport()">✕ Annuler</button>
+          </div>`;
+      } else {
+        actionsDiv.innerHTML = `
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn-success" onclick="importPlan('draft')">💾 Sauvegarder en brouillon</button>
+            <button class="btn-primary" onclick="importPlan('published')">▶ Importer et publier directement</button>
+            <button class="btn-h" onclick="cancelImport()">✕ Annuler</button>
+          </div>`;
+      }
+    } catch(e) {
+      actionsDiv.innerHTML = `
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn-success" onclick="importPlan('draft')">💾 Sauvegarder en brouillon</button>
+          <button class="btn-primary" onclick="importPlan('published')">▶ Importer et publier directement</button>
+          <button class="btn-h" onclick="cancelImport()">✕ Annuler</button>
+        </div>`;
+    }
+  }
+
+  window.importPlan = async function(status, existingId) {
+    if (!parsedPlan) return;
+    try {
+      if (status === 'update' && existingId) {
+        // Mettre à jour uniquement les séances, conserver le statut existant
+        const existing = await getDoc(doc(db,'race_plans',existingId));
+        const currentStatus = existing.exists() ? existing.data().status : 'draft';
+        parsedPlan.status = currentStatus;
+        await setDoc(doc(db,'race_plans',existingId), parsedPlan);
+        toast('✓ Plan mis à jour — suivis conservés !');
+      } else {
+        parsedPlan.status = status;
+        const id = 'plan_' + Date.now();
+        await setDoc(doc(db,'race_plans',id), parsedPlan);
+        toast(status==='published' ? '✓ Plan publié !' : '✓ Plan sauvegardé en brouillon !');
+      }
       parsedPlan = null;
       cancelImport();
       switchAdminTab('list');

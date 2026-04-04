@@ -236,7 +236,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
     let saved = {};
     if (currentUid) {
       try { const s=await getDoc(doc(db,'suivi_course',currentUid)); if(s.exists()) saved=s.data(); } catch(e) {}
-      try { await setDoc(doc(db,'suivi_course',currentUid),{_plan:plan},{merge:true}); } catch(e) {}
+      // Le plan est sauvegardé uniquement lors d'un saveSuivi explicite
     }
     document.getElementById('p-suivi').innerHTML = buildSuivi(plan, saved);
   };
@@ -300,14 +300,37 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
             const pc=u.plan==='A'?'#fc4c02':u.plan==='B'?'#4f8ef7':u.plan==='C'?'#22c55e':'var(--mut)';
             html+=`<tr><td class="tdn">${u.prenom} ${u.nom}</td><td style="color:${pc};font-weight:700;font-size:11px">${u.plan}</td>`;
             for (let i=0;i<7;i++) {
-              const sens=sd[wk+'_sens'+i]||'', km=sd[wk+'_km'+i]||'';
-              html+=`<td><div style="font-size:14px">${sens||'—'}</div>${km?`<div style="font-size:10px;color:var(--mut)">${km}km</div>`:''}</td>`;
+              const sens=sd[wk+'_sens'+i]||'', km=sd[wk+'_km'+i]||'', dp=sd[wk+'_dp'+i]||'';
+              html+=`<td><div style="font-size:14px">${sens||'—'}</div>${km?`<div style="font-size:10px;color:var(--mut)">${km}km</div>`:''  }${dp?`<div style="font-size:10px;color:var(--acc)">${dp}m</div>`:''}</td>`;
             }
             html+=`<td style="color:var(--acc);font-weight:600">${sd[wk+'_cumkm']||'0'}</td><td style="color:var(--mut)">${sd[wk+'_cumdp']||'0'}m</td></tr>`;
           }
           html+=`</tbody></table></div>`;
         }
-      }
+    }
+    // Tableau cumul total par adhérent (toutes semaines confondues)
+    html += `<h3 style="font-size:12px;color:var(--mut);margin:24px 0 8px;text-transform:uppercase;letter-spacing:.06em">📊 Cumul total saison</h3>`;
+    html += `<div class="rtw"><table class="rt"><thead><tr>
+      <th style="text-align:left">Adhérent</th><th>Plan</th>
+      <th>Total km</th><th>Total D+</th>
+    </tr></thead><tbody>`;
+    for (const u of users) {
+      const sd = suivis[u.uid]||{};
+      let totalKm=0, totalDp=0;
+      // Additionner tous les cumuls hebdo
+      Object.keys(sd).forEach(k => {
+        if (k.endsWith('_cumkm')) totalKm += parseFloat(sd[k]||0);
+        if (k.endsWith('_cumdp')) totalDp += parseFloat(sd[k]||0);
+      });
+      const pc = u.plan==='A'?'#fc4c02':u.plan==='B'?'#4f8ef7':u.plan==='C'?'#22c55e':'var(--mut)';
+      html += `<tr>
+        <td class="tdn">${u.prenom} ${u.nom}</td>
+        <td style="color:${pc};font-weight:700;font-size:11px">${u.plan}</td>
+        <td style="color:var(--acc);font-weight:700;font-size:13px">${totalKm.toFixed(1)} km</td>
+        <td style="color:var(--mut);font-weight:600">${Math.round(totalDp)} m</td>
+      </tr>`;
+    }
+    html += `</tbody></table></div>`;
       div.innerHTML=html;
     } catch(e) { div.innerHTML=`<p style="color:#ff6b6b;font-size:13px">Erreur : ${e.message}</p>`; }
   }

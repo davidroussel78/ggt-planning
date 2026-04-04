@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>GGT — Plans de compétition</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+<!-- SheetJS pour lire les fichiers Excel -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0d0f14;--surf:#161a23;--surf2:#1e2330;--brd:rgba(255,255,255,.08);--txt:#e8eaf0;--mut:#7a8099;--acc:#4f8ef7;--ora:#fc4c02;--grn:#22c55e;--amb:#f59e0b;--red:#ef4444}
+html,body{min-height:100%}
+body{background:var(--bg);font-family:'Outfit',sans-serif;color:var(--txt);background-image:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(79,142,247,.06),transparent 60%)}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:.5px solid var(--brd);background:rgba(22,26,35,.9);backdrop-filter:blur(10px);position:sticky;top:0;z-index:10;flex-wrap:wrap;gap:8px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo img{width:36px;height:36px;border-radius:9px;object-fit:contain}
+.logo h1{font-size:16px;font-weight:600}
+.logo p{font-size:11px;color:var(--mut)}
+.btn-h{background:var(--surf2);border:.5px solid var(--brd);border-radius:8px;padding:6px 12px;color:var(--mut);font-family:'Outfit',sans-serif;font-size:12px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:color .2s,border-color .2s}
+.btn-h:hover{color:var(--txt);border-color:var(--acc)}
+.btn-primary{background:var(--acc);border:none;border-radius:8px;padding:8px 18px;color:#fff;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .2s}
+.btn-primary:hover{opacity:.9}
+.btn-danger{background:var(--red);border:none;border-radius:8px;padding:6px 14px;color:#fff;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:opacity .2s}
+.btn-danger:hover{opacity:.9}
+.btn-success{background:var(--grn);border:none;border-radius:8px;padding:8px 18px;color:#fff;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .2s}
+.btn-success:hover{opacity:.9}
+.btn-warn{background:var(--amb);border:none;border-radius:8px;padding:6px 14px;color:#000;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:opacity .2s}
+.main{max-width:1300px;margin:0 auto;padding:20px}
+
+/* ONGLETS PRINCIPAUX */
+.tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.tbtn{padding:7px 16px;border-radius:8px;border:.5px solid var(--brd);background:var(--surf);color:var(--mut);cursor:pointer;font-family:'Outfit',sans-serif;font-size:13px;transition:all .2s}
+.tbtn.on{background:var(--surf2);border-color:var(--acc);color:var(--txt)}
+.tpan{display:none}
+.tpan.on{display:block}
+
+/* LISTE DES COMPÉTITIONS */
+.comp-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-bottom:24px}
+.comp-card{background:var(--surf);border:.5px solid var(--brd);border-radius:14px;padding:16px;cursor:pointer;transition:border-color .2s,background .2s}
+.comp-card:hover{border-color:var(--acc);background:var(--surf2)}
+.comp-card.selected{border-color:var(--acc);background:var(--surf2)}
+.comp-card-name{font-size:15px;font-weight:600;margin-bottom:4px}
+.comp-card-date{font-size:12px;color:var(--ora);margin-bottom:8px}
+.comp-card-meta{font-size:11px;color:var(--mut);display:flex;gap:12px;flex-wrap:wrap}
+.comp-card-badge{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600}
+.badge-pub{background:rgba(34,197,94,.15);color:var(--grn)}
+.badge-draft{background:rgba(245,158,11,.15);color:var(--amb)}
+.badge-arch{background:rgba(122,128,153,.15);color:var(--mut)}
+.comp-card-dists{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.dist-pill{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;border:.5px solid var(--brd)}
+
+/* CHOIX DISTANCE */
+.dist-chooser{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center}
+.dist-chooser label{font-size:13px;color:var(--mut)}
+.dbtn{padding:8px 20px;border-radius:10px;border:.5px solid var(--brd);background:var(--surf);color:var(--mut);cursor:pointer;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;transition:all .2s}
+.dbtn:hover{border-color:var(--acc);color:var(--txt)}
+.dbtn.on{background:rgba(79,142,247,.15);border-color:var(--acc);color:var(--acc)}
+
+/* PLAN */
+.ph-block{margin-bottom:24px}
+.ph-head{display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:10px;margin-bottom:10px;border:.5px solid var(--brd)}
+.ph-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.ph-title{font-size:14px;font-weight:600}
+.ph-period{font-size:11px;color:var(--mut);margin-left:auto}
+.wk-block{margin-bottom:12px}
+.wk-head{display:flex;align-items:center;gap:10px;padding:7px 12px;background:var(--surf);border-radius:8px 8px 0 0;border:.5px solid var(--brd);border-bottom:none}
+.wk-num{font-size:10px;font-weight:700;color:var(--ora);letter-spacing:.06em;text-transform:uppercase}
+.wk-title{font-size:12px;color:var(--txt)}
+.wk-dates{font-size:10px;color:var(--mut);margin-left:auto}
+.wk-grid{display:grid;grid-template-columns:repeat(7,1fr);border:.5px solid var(--brd);border-radius:0 0 8px 8px;overflow:hidden}
+.dc{border-right:.5px solid var(--brd)}
+.dc:last-child{border-right:none}
+.dh{background:var(--surf2);padding:5px 6px;text-align:center;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);border-bottom:.5px solid var(--brd)}
+.dh span{font-size:8px;opacity:.6;font-weight:400;display:block}
+.dcell{background:var(--surf);padding:7px;font-size:11px;color:#a8b0c8;line-height:1.5;white-space:pre-line;min-height:55px}
+.dcell.repos{color:rgba(122,128,153,.35);font-style:italic}
+.dcell.course{background:rgba(252,76,2,.08);color:#fc7c42;font-weight:600}
+.dcell.recup{background:rgba(79,142,247,.05)}
+
+/* SUIVI */
+.sv-wrap{margin-bottom:18px}
+.sv-wktitle{font-size:12px;font-weight:600;color:var(--mut);margin-bottom:6px;padding:6px 10px;background:var(--surf);border-radius:8px}
+.sv-grid{display:grid;grid-template-columns:repeat(7,1fr);border:.5px solid var(--brd);border-radius:8px;overflow:hidden;margin-bottom:6px}
+.sv-day{border-right:.5px solid var(--brd);background:var(--surf)}
+.sv-day:last-child{border-right:none}
+.sv-dh{background:var(--surf2);padding:5px 3px;text-align:center;font-size:9px;font-weight:700;color:var(--mut);border-bottom:.5px solid var(--brd);text-transform:uppercase}
+.sv-dh span{font-size:7px;opacity:.6;font-weight:400;display:block}
+.sv-db{padding:5px 3px}
+.sv-sel{width:100%;background:var(--surf2);border:.5px solid var(--brd);border-radius:4px;padding:3px 2px;color:var(--txt);font-family:'Outfit',sans-serif;font-size:10px;outline:none;margin-bottom:3px;cursor:pointer}
+.sv-inp{width:100%;background:var(--surf2);border:.5px solid var(--brd);border-radius:4px;padding:3px 4px;color:var(--txt);font-family:'Outfit',sans-serif;font-size:10px;outline:none;margin-bottom:2px}
+.sv-inp::placeholder{color:var(--mut)}
+.sv-foot{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+.cumul{background:var(--surf);border:.5px solid var(--brd);border-radius:7px;padding:6px 12px;font-size:12px;color:var(--mut)}
+.cumul strong{color:var(--txt)}
+.btn-sv{padding:6px 16px;border-radius:7px;border:none;background:var(--acc);color:#fff;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer}
+.cumul-total{margin-top:14px;padding:14px 18px;background:var(--surf2);border-radius:10px;border:.5px solid var(--brd);display:flex;gap:30px;align-items:center}
+.cumul-total span{font-size:12px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
+.cumul-total .val-km{font-size:16px;font-weight:700;color:var(--acc)}
+.cumul-total .val-dp{font-size:16px;font-weight:700;color:var(--grn)}
+
+/* RECAP ADMIN */
+.rtw{overflow-x:auto;border-radius:8px;border:.5px solid var(--brd);margin-bottom:14px}
+.rt{width:100%;border-collapse:collapse;font-size:12px;background:var(--surf);min-width:700px}
+.rt th{background:var(--surf2);color:var(--mut);font-size:9px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:8px;text-align:center;border-bottom:.5px solid var(--brd);white-space:nowrap}
+.rt td{padding:6px 8px;text-align:center;border-bottom:.5px solid rgba(255,255,255,.04);color:var(--txt)}
+.rt tr:last-child td{border-bottom:none}
+.tdn{text-align:left!important;font-weight:600}
+
+/* ADMIN — UPLOAD */
+.upload-zone{border:2px dashed var(--brd);border-radius:14px;padding:40px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:20px}
+.upload-zone:hover{border-color:var(--acc);background:rgba(79,142,247,.04)}
+.upload-zone.dragover{border-color:var(--acc);background:rgba(79,142,247,.08)}
+.upload-icon{font-size:40px;margin-bottom:12px}
+.upload-title{font-size:15px;font-weight:600;margin-bottom:6px}
+.upload-hint{font-size:12px;color:var(--mut)}
+#file-input{display:none}
+
+/* APERÇU IMPORT */
+.preview-card{background:var(--surf);border:.5px solid rgba(34,197,94,.3);border-radius:14px;padding:20px;margin-bottom:20px}
+.preview-title{font-size:14px;font-weight:600;color:var(--grn);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:16px}
+.preview-item{background:var(--surf2);border-radius:8px;padding:10px}
+.preview-item label{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);display:block;margin-bottom:4px}
+.preview-item span{font-size:13px;color:var(--txt)}
+.preview-dists{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.preview-weeks{font-size:12px;color:var(--mut);margin-bottom:14px}
+.preview-actions{display:flex;gap:10px;flex-wrap:wrap}
+
+/* LISTE ADMIN */
+.admin-comp-item{background:var(--surf);border:.5px solid var(--brd);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.admin-comp-info{flex:1;min-width:200px}
+.admin-comp-name{font-size:14px;font-weight:600}
+.admin-comp-meta{font-size:12px;color:var(--mut);margin-top:3px}
+.admin-comp-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surf2);border:.5px solid rgba(34,197,94,.4);border-radius:10px;padding:12px 20px;font-size:13px;color:var(--grn);transition:transform .3s;z-index:100;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.err{border-color:rgba(224,0,32,.4);color:#ff6b6b}
+.toast.warn{border-color:rgba(245,158,11,.4);color:var(--amb)}
+
+/* LOADING */
+.loading{display:flex;align-items:center;justify-content:center;min-height:160px;color:var(--mut);font-size:14px;gap:10px}
+.spin{width:18px;height:18px;border:2px solid var(--brd);border-top-color:var(--acc);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* VIDE */
+.empty{text-align:center;padding:50px 20px;color:var(--mut)}
+.empty-icon{font-size:36px;margin-bottom:12px}
+.empty p{font-size:14px}
+
+/* MODAL CONFIRMATION */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:var(--surf);border:.5px solid var(--brd);border-radius:16px;padding:28px;max-width:420px;width:90%}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:10px}
+.modal-body{font-size:13px;color:var(--mut);margin-bottom:20px;line-height:1.6}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end}
+
+@media(max-width:800px){.wk-grid,.sv-grid{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <img src="data:image/png;base64,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" alt="GGT">
+    <div><h1>Plans de compétition</h1><p>Génépi Groupe Trail · CoachDav</p></div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <span id="user-name" style="font-size:13px;color:var(--mut)"></span>
+    <a href="planning.html" class="btn-h">← Retour planning</a>
+    <button class="btn-h" onclick="logout()">Déconnexion</button>
+  </div>
+</header>
+
+<div class="main">
+  <div class="tabs" id="main-tabs">
+    <button class="tbtn on" id="t-mes-plans" onclick="switchMainTab('mes-plans')">🏆 Mes compétitions</button>
+    <button class="tbtn" id="t-admin" style="display:none" onclick="switchMainTab('admin')">⚙️ Admin</button>
+  </div>
+
+  <!-- ═══ VUE ADHÉRENT ═══ -->
+  <div class="tpan on" id="p-mes-plans">
+    <div class="loading" id="load-comps"><div class="spin"></div> Chargement...</div>
+    <div id="comp-list-adhérent" style="display:none">
+      <!-- Liste des compétitions publiées -->
+      <div class="comp-list" id="comps-grid"></div>
+      <!-- Détail d'une compétition sélectionnée -->
+      <div id="comp-detail" style="display:none">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+          <button class="btn-h" onclick="backToList()">← Toutes les compétitions</button>
+          <div>
+            <div id="detail-name" style="font-size:18px;font-weight:600"></div>
+            <div id="detail-date" style="font-size:13px;color:var(--ora)"></div>
+          </div>
+        </div>
+        <!-- Choix distance -->
+        <div class="dist-chooser" id="dist-chooser">
+          <label>Ma distance :</label>
+          <div id="dist-buttons"></div>
+        </div>
+        <!-- Sous-onglets Plan / Suivi -->
+        <div class="tabs">
+          <button class="tbtn on" id="t-plan" onclick="switchSubTab('plan')">📋 Plan d'entraînement</button>
+          <button class="tbtn" id="t-suivi" onclick="switchSubTab('suivi')">📊 Mon suivi</button>
+          <button class="tbtn" id="t-recap" style="display:none" onclick="switchSubTab('recap')">👁 Vue CoachDav</button>
+        </div>
+        <div class="tpan on" id="p-plan"><p style="color:var(--mut);font-size:14px;padding:40px 0;text-align:center">👆 Sélectionne ta distance</p></div>
+        <div class="tpan" id="p-suivi"><p style="color:var(--mut);font-size:13px;padding:30px 0;text-align:center">Sélectionne ta distance pour accéder au suivi</p></div>
+        <div class="tpan" id="p-recap"><div class="loading"><div class="spin"></div> Chargement...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ VUE ADMIN ═══ -->
+  <div class="tpan" id="p-admin">
+    <div class="tabs">
+      <button class="tbtn on" id="t-admin-list" onclick="switchAdminTab('list')">📋 Gérer les plans</button>
+      <button class="tbtn" id="t-admin-new" onclick="switchAdminTab('new')">➕ Nouveau plan</button>
+    </div>
+
+    <!-- Liste des plans admin -->
+    <div class="tpan on" id="p-admin-list">
+      <div id="admin-comps-list"><div class="loading"><div class="spin"></div> Chargement...</div></div>
+    </div>
+
+    <!-- Nouveau plan via upload -->
+    <div class="tpan" id="p-admin-new">
+      <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()" 
+           ondragover="event.preventDefault();this.classList.add('dragover')"
+           ondragleave="this.classList.remove('dragover')"
+           ondrop="handleDrop(event)">
+        <input type="file" id="file-input" accept=".xlsx" onchange="handleFile(event)">
+        <div class="upload-icon">📂</div>
+        <div class="upload-title">Glisse ton fichier Excel ici</div>
+        <div class="upload-hint">ou clique pour sélectionner — Format : GGT_Template_Plan_Course.xlsx</div>
+      </div>
+      <!-- Aperçu après lecture du fichier -->
+      <div id="preview-area" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal confirmation -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Confirmer</div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-actions">
+      <button class="btn-h" onclick="closeModal()">Annuler</button>
+      <button class="btn-danger" id="modal-confirm">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { initializeApp }   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC7a3obsTgqf5An8v1t8fpQWCln-ZbZWpk",
+    authDomain: "ggt-planning-30503.firebaseapp.com",
+    projectId: "ggt-planning-30503",
+    storageBucket: "ggt-planning-30503.firebasestorage.app",
+    messagingSenderId: "172309807991",
+    appId: "1:172309807991:web:6a66ce809970c10c375772"
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  let currentUid = null, isAdmin = false;
+  let currentComp = null;   // compétition sélectionnée
+  let currentDist = null;   // distance choisie
+  let parsedPlan  = null;   // plan lu depuis Excel (avant import)
+
+  const JOURS = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+  const SENS  = ['','😊','🙂','😐','😓','😰'];
+  const SLBL  = ['— Repos','😊 Très facile','🙂 Facile','😐 Normal','😓 Difficile','😰 Très difficile'];
+  const DIST_COLORS = ['#fc4c02','#4f8ef7','#22c55e','#f59e0b'];
+
+  // ── Utilitaires ──
+  function toast(msg, type='ok') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show' + (type==='err'?' err':type==='warn'?' warn':'');
+    setTimeout(()=>t.className='toast'+(type==='err'?' err':type==='warn'?' warn':''), 3500);
+  }
+
+  function dayClass(t) {
+    if (!t||t.toLowerCase().startsWith('repos')) return 'repos';
+    if (t.toLowerCase().includes('récup')) return 'recup';
+    if (['🎯','🏆','course','compétition'].some(x=>t.toLowerCase().includes(x.toLowerCase()))) return 'course';
+    return '';
+  }
+
+  // Calculer la date d'un lundi à partir de la date de début + offset semaines
+  function getMondayDate(startDate, weekIndex) {
+    const d = new Date(startDate);
+    d.setDate(d.getDate() + weekIndex * 7);
+    return d;
+  }
+
+  function formatDate(d) {
+    return d.toLocaleDateString('fr-FR', {day:'numeric', month:'short'});
+  }
+
+  // ── Navigation ──
+  window.switchMainTab = function(name) {
+    ['mes-plans','admin'].forEach(n => {
+      document.getElementById('p-'+n).className = 'tpan'+(n===name?' on':'');
+      document.getElementById('t-'+n).className = 'tbtn'+(n===name?' on':'');
+    });
+    if (name==='admin') loadAdminList();
+  };
+
+  window.switchSubTab = function(name) {
+    ['plan','suivi','recap'].forEach(n => {
+      document.getElementById('p-'+n).className = 'tpan'+(n===name?' on':'');
+      document.getElementById('t-'+n).className = 'tbtn'+(n===name?' on':'');
+    });
+    if (name==='recap') loadRecap();
+  };
+
+  window.switchAdminTab = function(name) {
+    ['list','new'].forEach(n => {
+      document.getElementById('p-admin-'+n).className = 'tpan'+(n===name?' on':'');
+      document.getElementById('t-admin-'+n).className = 'tbtn'+(n===name?' on':'');
+    });
+  };
+
+  window.logout = () => signOut(auth).then(()=>window.location.href='index.html');
+
+  // ── Chargement liste compétitions ──
+  async function loadComps() {
+    document.getElementById('load-comps').style.display = 'flex';
+    document.getElementById('comp-list-adhérent').style.display = 'none';
+    try {
+      const snap = await getDocs(collection(db,'race_plans'));
+      const comps = [];
+      snap.forEach(d => {
+        const data = d.data();
+        if (isAdmin || data.status === 'published') {
+          comps.push({id: d.id, ...data});
+        }
+      });
+      // Trier par date de course
+      comps.sort((a,b) => new Date(a.date_course) - new Date(b.date_course));
+      renderCompList(comps);
+    } catch(e) {
+      document.getElementById('comps-grid').innerHTML = `<p style="color:#ff6b6b;font-size:13px">Erreur : ${e.message}</p>`;
+    }
+    document.getElementById('load-comps').style.display = 'none';
+    document.getElementById('comp-list-adhérent').style.display = 'block';
+  }
+
+  function renderCompList(comps) {
+    const grid = document.getElementById('comps-grid');
+    if (!comps.length) {
+      grid.innerHTML = '<div class="empty"><div class="empty-icon">🏁</div><p>Aucune compétition disponible pour le moment.</p></div>';
+      return;
+    }
+    grid.innerHTML = comps.map(c => {
+      const badgeCls = c.status==='published'?'badge-pub':c.status==='draft'?'badge-draft':'badge-arch';
+      const badgeTxt = c.status==='published'?'Publié':c.status==='draft'?'Brouillon':'Archivé';
+      const dists = (c.distances||[]).map((d,i) => 
+        `<span class="dist-pill" style="color:${DIST_COLORS[i]};border-color:${DIST_COLORS[i]}">${d.label}</span>`
+      ).join('');
+      return `<div class="comp-card" onclick="selectComp('${c.id}')">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+          <div class="comp-card-name">${c.nom}</div>
+          <span class="comp-card-badge ${badgeCls}">${badgeTxt}</span>
+        </div>
+        <div class="comp-card-date">📅 ${c.date_course} ${c.lieu ? '· 📍 '+c.lieu : ''}</div>
+        <div class="comp-card-dists">${dists}</div>
+        <div class="comp-card-meta">
+          <span>${c.nb_semaines || '?'} semaines de préparation</span>
+          <span>À partir du ${c.date_debut||'?'}</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Sélectionner une compétition ──
+  window.selectComp = async function(compId) {
+    document.getElementById('comps-grid').style.display = 'none';
+    document.getElementById('comp-detail').style.display = 'block';
+    document.getElementById('p-plan').innerHTML = '<div class="loading"><div class="spin"></div> Chargement...</div>';
+
+    const snap = await getDoc(doc(db,'race_plans',compId));
+    currentComp = {id: compId, ...snap.data()};
+
+    document.getElementById('detail-name').textContent = currentComp.nom;
+    document.getElementById('detail-date').textContent = '📅 ' + currentComp.date_course + (currentComp.lieu ? ' · 📍 ' + currentComp.lieu : '');
+
+    // Afficher les boutons de distance
+    const btns = document.getElementById('dist-buttons');
+    btns.innerHTML = (currentComp.distances||[]).map((d,i) =>
+      `<button class="dbtn" id="dbtn-${i}" onclick="chooseDist(${i})" style="border-color:${DIST_COLORS[i]}">${d.label}</button>`
+    ).join('');
+
+    // Afficher bouton recap si admin
+    document.getElementById('t-recap').style.display = isAdmin ? 'block' : 'none';
+
+    // Charger distance précédemment choisie
+    if (currentUid) {
+      try {
+        const svSnap = await getDoc(doc(db,'race_suivi',currentUid+'_'+compId));
+        if (svSnap.exists() && svSnap.data()._dist !== undefined) {
+          await window.chooseDist(svSnap.data()._dist);
+          return;
+        }
+      } catch(e) {}
+    }
+    document.getElementById('p-plan').innerHTML = '<p style="color:var(--mut);font-size:14px;padding:40px 0;text-align:center">👆 Sélectionne ta distance ci-dessus</p>';
+  };
+
+  window.backToList = function() {
+    document.getElementById('comps-grid').style.display = 'grid';
+    document.getElementById('comp-detail').style.display = 'none';
+    currentComp = null; currentDist = null;
+  };
+
+  // ── Choisir une distance ──
+  window.chooseDist = async function(distIdx) {
+    if (!currentComp) return;
+    currentDist = distIdx;
+
+    // Mettre à jour les boutons
+    (currentComp.distances||[]).forEach((_,i) => {
+      const b = document.getElementById('dbtn-'+i);
+      if (b) b.className = 'dbtn'+(i===distIdx?' on':'');
+    });
+
+    // Afficher le plan
+    document.getElementById('p-plan').innerHTML = buildPlan(currentComp, distIdx);
+
+    // Charger le suivi
+    let saved = {};
+    if (currentUid) {
+      try {
+        const s = await getDoc(doc(db,'race_suivi',currentUid+'_'+currentComp.id));
+        if (s.exists()) saved = s.data();
+      } catch(e) {}
+      // Sauvegarder le choix de distance seulement au moment d'un save explicite
+    }
+    document.getElementById('p-suivi').innerHTML = buildSuivi(currentComp, distIdx, saved);
+  };
+
+  // ── Construire le plan ──
+  function buildPlan(comp, distIdx) {
+    const dist = comp.distances[distIdx];
+    const weeks = comp.semaines || [];
+    const startDate = new Date(comp.date_debut_iso || Date.now());
+
+    // Grouper par phase
+    const phases = {};
+    const phaseOrder = [];
+    weeks.forEach((w, wi) => {
+      if (!phases[w.phase]) { phases[w.phase] = []; phaseOrder.push(w.phase); }
+      phases[w.phase].push({...w, weekIndex: wi});
+    });
+
+    let h = '';
+    phaseOrder.forEach((pname, pi) => {
+      const color = ['#22c55e','#f59e0b','#4f8ef7','#fc4c02'][pi % 4];
+      const rgb = color.slice(1).match(/../g).map(x=>parseInt(x,16)).join(',');
+      h += `<div class="ph-block">
+        <div class="ph-head" style="background:rgba(${rgb},.06);border-color:rgba(${rgb},.25)">
+          <div class="ph-dot" style="background:${color}"></div>
+          <span class="ph-title">${pname}</span>
+        </div>`;
+      phases[pname].forEach(w => {
+        const monday = getMondayDate(startDate, w.weekIndex);
+        const sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
+        const days = w.distances[distIdx] || Array(7).fill('Repos');
+        const dates = Array.from({length:7}, (_,i) => {
+          const d = new Date(monday); d.setDate(monday.getDate()+i);
+          return d.getDate()+'/'+(d.getMonth()+1);
+        });
+        h += `<div class="wk-block">
+          <div class="wk-head">
+            <span class="wk-num">${w.num}</span>
+            <span class="wk-title">${w.titre}</span>
+            <span class="wk-dates">${formatDate(monday)} → ${formatDate(sunday)}</span>
+          </div>
+          <div class="wk-grid">`;
+        for (let i=0;i<7;i++) {
+          const txt = days[i] || 'Repos';
+          h += `<div class="dc"><div class="dh">${JOURS[i]}<span>${dates[i]}</span></div><div class="dcell ${dayClass(txt)}">${txt}</div></div>`;
+        }
+        h += `</div></div>`;
+      });
+      h += '</div>';
+    });
+    return h;
+  }
+
+  // ── Construire le suivi ──
+  function buildSuivi(comp, distIdx, saved) {
+    const weeks = comp.semaines || [];
+    const startDate = new Date(comp.date_debut_iso || Date.now());
+    let totalKm=0, totalDp=0;
+
+    let h = '<p style="font-size:12px;color:var(--mut);margin-bottom:14px;">Remplis tes sensations après chaque séance puis clique Sauvegarder.</p>';
+
+    weeks.forEach((w, wi) => {
+      const wk = 'w_'+w.num;
+      let cumKm=0, cumDp=0;
+      for (let i=0;i<7;i++) {
+        cumKm += parseFloat(saved[wk+'_km'+i]||0);
+        cumDp  += parseFloat(saved[wk+'_dp'+i]||0);
+      }
+      totalKm += cumKm; totalDp += cumDp;
+      const monday = getMondayDate(startDate, wi);
+      const dates = Array.from({length:7}, (_,i) => {
+        const d = new Date(monday); d.setDate(monday.getDate()+i);
+        return d.getDate()+'/'+(d.getMonth()+1);
+      });
+      h += `<div class="sv-wrap"><div class="sv-wktitle">${w.num} — ${w.titre}</div><div class="sv-grid">`;
+      for (let i=0;i<7;i++) {
+        const sv=saved[wk+'_sens'+i]||'', km=saved[wk+'_km'+i]||'', dp=saved[wk+'_dp'+i]||'';
+        const opts = SLBL.map((l,idx)=>`<option value="${SENS[idx]}" ${SENS[idx]===sv?'selected':''}>${l}</option>`).join('');
+        h += `<div class="sv-day">
+          <div class="sv-dh">${JOURS[i]}<span>${dates[i]}</span></div>
+          <div class="sv-db">
+            <select class="sv-sel" id="${wk}_sens${i}">${opts}</select>
+            <input class="sv-inp" type="number" step="0.1" min="0" placeholder="km" id="${wk}_km${i}" value="${km}">
+            <input class="sv-inp" type="number" step="10"  min="0" placeholder="D+" id="${wk}_dp${i}" value="${dp}">
+          </div>
+        </div>`;
+      }
+      h += `</div><div class="sv-foot">
+        <div class="cumul">Cumul : <strong>${cumKm.toFixed(1)} km</strong> · <strong>${Math.round(cumDp)} m D+</strong></div>
+        <button class="btn-sv" onclick="saveSuivi('${wk}')">💾 Sauvegarder</button>
+      </div></div>`;
+    });
+
+    h += `<div class="cumul-total">
+      <span>📊 Cumul total</span>
+      <span class="val-km">${totalKm.toFixed(1)} km</span>
+      <span class="val-dp">${Math.round(totalDp)} m D+</span>
+    </div>`;
+    return h;
+  }
+
+  // ── Sauvegarder le suivi ──
+  window.saveSuivi = async function(wk) {
+    if (!currentUid || !currentComp) { toast('Non connecté', 'err'); return; }
+    const data = { _dist: currentDist };
+    let cumKm=0, cumDp=0;
+    for (let i=0;i<7;i++) {
+      data[wk+'_sens'+i] = document.getElementById(wk+'_sens'+i)?.value||'';
+      data[wk+'_km'+i]   = document.getElementById(wk+'_km'+i)?.value||'';
+      data[wk+'_dp'+i]   = document.getElementById(wk+'_dp'+i)?.value||'';
+      cumKm += parseFloat(data[wk+'_km'+i]||0);
+      cumDp  += parseFloat(data[wk+'_dp'+i]||0);
+    }
+    data[wk+'_cumkm'] = cumKm.toFixed(1);
+    data[wk+'_cumdp'] = Math.round(cumDp);
+    try {
+      await setDoc(doc(db,'race_suivi',currentUid+'_'+currentComp.id), data, {merge:true});
+      toast('✓ Suivi sauvegardé !');
+    } catch(e) { toast('Erreur : '+e.message, 'err'); }
+  };
+
+  // ── Vue CoachDav recap ──
+  async function loadRecap() {
+    if (!isAdmin || !currentComp) return;
+    const div = document.getElementById('p-recap');
+    div.innerHTML = '<div class="loading"><div class="spin"></div> Chargement...</div>';
+    try {
+      // Récupérer tous les users
+      const usersSnap = await getDocs(collection(db,'users'));
+      const allUsers = [];
+      usersSnap.forEach(d => allUsers.push({uid:d.id, prenom:d.data().prenom||'', nom:d.data().nom||''}));
+
+      // Récupérer les suivis pour cette compétition
+      const users=[], suivis={};
+      for (const u of allUsers) {
+        try {
+          const snap = await getDoc(doc(db,'race_suivi',u.uid+'_'+currentComp.id));
+          if (snap.exists()) {
+            const sd = snap.data(); suivis[u.uid]=sd;
+            u.dist = sd._dist !== undefined ? sd._dist : null;
+            u.distLabel = u.dist !== null ? (currentComp.distances[u.dist]?.label||'?') : '?';
+            if (Object.keys(sd).some(k=>(k.includes('_sens')||k.includes('_km'))&&sd[k])) users.push(u);
+          }
+        } catch(e) {}
+      }
+
+      if (!users.length) { div.innerHTML='<p style="color:var(--mut);font-size:13px;padding:20px 0">Aucun adhérent n&apos;a encore rempli son suivi.</p>'; return; }
+
+      const weeks = currentComp.semaines||[];
+      let html='';
+
+      // Tableau par semaine
+      weeks.forEach(w => {
+        const wk='w_'+w.num;
+        html+=`<h4 style="font-size:12px;color:var(--mut);margin:16px 0 6px;text-transform:uppercase;letter-spacing:.05em">${w.num} — ${w.titre}</h4>`;
+        html+=`<div class="rtw"><table class="rt"><thead><tr><th style="text-align:left">Adhérent</th><th>Distance</th>`;
+        for (let i=0;i<7;i++) html+=`<th>${JOURS[i]}</th>`;
+        html+=`<th>km</th><th>D+</th></tr></thead><tbody>`;
+        users.forEach(u => {
+          const sd=suivis[u.uid]||{};
+          const dc = u.dist!==null ? DIST_COLORS[u.dist] : 'var(--mut)';
+          html+=`<tr><td class="tdn">${u.prenom} ${u.nom}</td><td style="color:${dc};font-weight:600;font-size:11px">${u.distLabel}</td>`;
+          for (let i=0;i<7;i++) {
+            const sens=sd[wk+'_sens'+i]||'', km=sd[wk+'_km'+i]||'', dp=sd[wk+'_dp'+i]||'';
+            html+=`<td><div style="font-size:14px">${sens||'—'}</div>${km?`<div style="font-size:10px;color:var(--mut)">${km}km</div>`:''}${dp?`<div style="font-size:10px;color:var(--acc)">${dp}m</div>`:''}</td>`;
+          }
+          html+=`<td style="color:var(--acc);font-weight:600">${sd[wk+'_cumkm']||'0'}</td><td style="color:var(--mut)">${sd[wk+'_cumdp']||'0'}m</td></tr>`;
+        });
+        html+=`</tbody></table></div>`;
+      });
+
+      // Tableau cumul total
+      html+=`<h4 style="font-size:12px;color:var(--mut);margin:20px 0 6px;text-transform:uppercase;letter-spacing:.05em">📊 Cumul total saison</h4>`;
+      html+=`<div class="rtw"><table class="rt"><thead><tr><th style="text-align:left">Adhérent</th><th>Distance</th><th>Total km</th><th>Total D+</th></tr></thead><tbody>`;
+      users.forEach(u => {
+        const sd=suivis[u.uid]||{};
+        let tkm=0, tdp=0;
+        Object.keys(sd).forEach(k=>{ if(k.endsWith('_cumkm')) tkm+=parseFloat(sd[k]||0); if(k.endsWith('_cumdp')) tdp+=parseFloat(sd[k]||0); });
+        const dc = u.dist!==null ? DIST_COLORS[u.dist] : 'var(--mut)';
+        html+=`<tr><td class="tdn">${u.prenom} ${u.nom}</td><td style="color:${dc};font-weight:600;font-size:11px">${u.distLabel}</td><td style="color:var(--acc);font-weight:700;font-size:13px">${tkm.toFixed(1)} km</td><td style="color:var(--mut);font-weight:600">${Math.round(tdp)} m</td></tr>`;
+      });
+      html+=`</tbody></table></div>`;
+      div.innerHTML=html;
+    } catch(e) { div.innerHTML=`<p style="color:#ff6b6b;font-size:13px">Erreur : ${e.message}</p>`; }
+  }
+
+  // ══════════════════════
+  // ADMIN — LISTE
+  // ══════════════════════
+  async function loadAdminList() {
+    const div = document.getElementById('admin-comps-list');
+    div.innerHTML = '<div class="loading"><div class="spin"></div> Chargement...</div>';
+    try {
+      const snap = await getDocs(collection(db,'race_plans'));
+      const comps = [];
+      snap.forEach(d => comps.push({id:d.id,...d.data()}));
+      comps.sort((a,b)=>new Date(a.date_course)-new Date(b.date_course));
+
+      if (!comps.length) { div.innerHTML='<div class="empty"><div class="empty-icon">📋</div><p>Aucun plan créé pour le moment.<br>Clique sur "+ Nouveau plan" pour commencer.</p></div>'; return; }
+
+      div.innerHTML = comps.map(c => {
+        const badgeCls = c.status==='published'?'badge-pub':c.status==='draft'?'badge-draft':'badge-arch';
+        const badgeTxt = c.status==='published'?'✓ Publié':c.status==='draft'?'📝 Brouillon':'🗃 Archivé';
+        return `<div class="admin-comp-item">
+          <div class="admin-comp-info">
+            <div class="admin-comp-name">${c.nom} <span class="comp-card-badge ${badgeCls}" style="margin-left:8px">${badgeTxt}</span></div>
+            <div class="admin-comp-meta">📅 ${c.date_course} · ${(c.distances||[]).map(d=>d.label).join(' / ')} · ${c.nb_semaines||'?'} semaines</div>
+          </div>
+          <div class="admin-comp-actions">
+            ${c.status!=='published' ? `<button class="btn-success" onclick="publishComp('${c.id}')">▶ Publier</button>` : `<button class="btn-warn" onclick="unpublishComp('${c.id}')">⏸ Dépublier</button>`}
+            <button class="btn-danger" onclick="confirmDelete('${c.id}','${c.nom}')">🗑 Supprimer</button>
+          </div>
+        </div>`;
+      }).join('');
+    } catch(e) { div.innerHTML=`<p style="color:#ff6b6b;font-size:13px">Erreur : ${e.message}</p>`; }
+  }
+
+  window.publishComp = async function(id) {
+    await setDoc(doc(db,'race_plans',id), {status:'published'}, {merge:true});
+    toast('✓ Plan publié !'); loadAdminList(); loadComps();
+  };
+  window.unpublishComp = async function(id) {
+    await setDoc(doc(db,'race_plans',id), {status:'draft'}, {merge:true});
+    toast('Plan dépublié', 'warn'); loadAdminList(); loadComps();
+  };
+
+  window.confirmDelete = function(id, nom) {
+    document.getElementById('modal-title').textContent = 'Supprimer ce plan ?';
+    document.getElementById('modal-body').textContent = `Le plan "${nom}" et tous les suivis associés seront supprimés définitivement.`;
+    document.getElementById('modal-confirm').onclick = () => deleteComp(id);
+    document.getElementById('modal').classList.add('show');
+  };
+  window.closeModal = () => document.getElementById('modal').classList.remove('show');
+
+  async function deleteComp(id) {
+    closeModal();
+    try {
+      await deleteDoc(doc(db,'race_plans',id));
+      toast('Plan supprimé'); loadAdminList(); loadComps();
+    } catch(e) { toast('Erreur : '+e.message,'err'); }
+  }
+
+  // ══════════════════════
+  // ADMIN — IMPORT EXCEL
+  // ══════════════════════
+  window.handleDrop = function(e) {
+    e.preventDefault();
+    document.getElementById('upload-zone').classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) readExcel(file);
+  };
+
+  window.handleFile = function(e) {
+    const file = e.target.files[0];
+    if (file) readExcel(file);
+  };
+
+  function readExcel(file) {
+    if (!file.name.endsWith('.xlsx')) { toast('Fichier .xlsx uniquement','err'); return; }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const wb = XLSX.read(e.target.result, {type:'array', cellDates:true});
+        parsedPlan = parseTemplate(wb);
+        showPreview(parsedPlan);
+      } catch(err) {
+        toast('Erreur de lecture : '+err.message,'err');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function parseTemplate(wb) {
+    // ── Lire INFOS COURSE ──
+    const ws1 = wb.Sheets['INFOS COURSE'];
+    if (!ws1) throw new Error('Feuille "INFOS COURSE" introuvable');
+
+    const nom         = ws1['B5']?.v || '';
+    const date_course = ws1['B6']?.v || '';
+    const lieu        = ws1['B7']?.v || '';
+    const notes       = ws1['B10']?.v || '';
+    const nb_semaines = parseInt(ws1['B20']?.v) || 0;
+    const date_debut  = ws1['B21']?.v || '';
+
+    // Distances (B14 à B17 = label, C14 à C17 = dist brute)
+    const distances = [];
+    for (let r=14; r<=17; r++) {
+      const label = ws1[`B${r}`]?.v;
+      const dist  = ws1[`A${r}`]?.v;
+      if (label && String(label).trim()) {
+        distances.push({ dist: String(dist||'').trim(), label: String(label).trim() });
+      }
+    }
+
+    if (!nom) throw new Error('Le nom de la course est manquant (cellule B5)');
+    if (!distances.length) throw new Error('Aucune distance trouvée (cellules B14 à B17)');
+
+    // Convertir date_debut en ISO
+    let date_debut_iso = '';
+    if (date_debut) {
+      if (date_debut instanceof Date) {
+        date_debut_iso = date_debut.toISOString().split('T')[0];
+      } else {
+        // Format JJ/MM/AAAA
+        const parts = String(date_debut).split('/');
+        if (parts.length===3) date_debut_iso = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+      }
+    }
+
+    // ── Lire PLAN ──
+    const ws2 = wb.Sheets['PLAN'];
+    if (!ws2) throw new Error('Feuille "PLAN" introuvable');
+
+    const rows = XLSX.utils.sheet_to_json(ws2, {header:1, defval:''});
+    // Les données commencent à la ligne 4 (index 3)
+    const dataRows = rows.slice(3).filter(r => r[0]); // col A = numéro semaine
+
+    // Grouper par numéro de semaine
+    const weeksMap = {};
+    const weekOrder = [];
+    dataRows.forEach(r => {
+      const num   = String(r[0]||'').trim();
+      const phase = String(r[1]||'').trim();
+      const titre = String(r[2]||'').trim();
+      const dist  = String(r[3]||'').trim();
+      const days  = [r[4],r[5],r[6],r[7],r[8],r[9],r[10]].map(d=>String(d||'Repos').trim());
+
+      if (!num) return;
+      if (!weeksMap[num]) {
+        weeksMap[num] = { num, phase, titre, distances: {} };
+        weekOrder.push(num);
+      }
+      // Trouver l'index de cette distance
+      const distIdx = distances.findIndex(d => d.dist === dist || d.label.includes(dist) || dist.includes(d.dist));
+      if (distIdx >= 0) weeksMap[num].distances[distIdx] = days;
+    });
+
+    const semaines = weekOrder.map(num => weeksMap[num]);
+
+    return { nom, date_course: String(date_course), lieu: String(lieu||''), notes: String(notes||''),
+             nb_semaines, date_debut: String(date_debut), date_debut_iso, distances, semaines,
+             status: 'draft', created_at: new Date().toISOString() };
+  }
+
+  function showPreview(plan) {
+    const area = document.getElementById('preview-area');
+    const dists = plan.distances.map((d,i) =>
+      `<span class="dist-pill" style="color:${DIST_COLORS[i]};border-color:${DIST_COLORS[i]}">${d.label}</span>`
+    ).join('');
+    area.innerHTML = `<div class="preview-card">
+      <div class="preview-title">✅ Fichier lu avec succès — Vérifie les informations avant d'importer</div>
+      <div class="preview-grid">
+        <div class="preview-item"><label>Nom de la course</label><span>${plan.nom}</span></div>
+        <div class="preview-item"><label>Date de la course</label><span>${plan.date_course}</span></div>
+        <div class="preview-item"><label>Lieu</label><span>${plan.lieu||'—'}</span></div>
+        <div class="preview-item"><label>Début du plan</label><span>${plan.date_debut}</span></div>
+        <div class="preview-item"><label>Nb de semaines</label><span>${plan.semaines.length} semaines lues</span></div>
+      </div>
+      <div style="margin-bottom:10px;font-size:12px;color:var(--mut)">Distances :</div>
+      <div class="preview-dists">${dists}</div>
+      <div class="preview-weeks" style="margin-bottom:14px">
+        Semaines lues : ${plan.semaines.map(w=>w.num).join(', ')}
+      </div>
+      ${plan.notes ? `<div style="font-size:12px;color:var(--mut);margin-bottom:14px;padding:10px;background:var(--surf2);border-radius:8px">💬 ${plan.notes}</div>` : ''}
+      <div class="preview-actions">
+        <button class="btn-success" onclick="importPlan('draft')">💾 Sauvegarder en brouillon</button>
+        <button class="btn-primary" onclick="importPlan('published')">▶ Importer et publier directement</button>
+        <button class="btn-h" onclick="cancelImport()">✕ Annuler</button>
+      </div>
+    </div>`;
+    area.style.display = 'block';
+    document.getElementById('upload-zone').style.display = 'none';
+  }
+
+  window.importPlan = async function(status) {
+    if (!parsedPlan) return;
+    parsedPlan.status = status;
+    try {
+      const id = 'plan_' + Date.now();
+      await setDoc(doc(db,'race_plans',id), parsedPlan);
+      toast(status==='published' ? '✓ Plan publié !' : '✓ Plan sauvegardé en brouillon !');
+      parsedPlan = null;
+      cancelImport();
+      switchAdminTab('list');
+      loadAdminList();
+      loadComps();
+    } catch(e) { toast('Erreur : '+e.message,'err'); }
+  };
+
+  window.cancelImport = function() {
+    document.getElementById('preview-area').style.display = 'none';
+    document.getElementById('preview-area').innerHTML = '';
+    document.getElementById('upload-zone').style.display = 'block';
+    document.getElementById('file-input').value = '';
+    parsedPlan = null;
+  };
+
+  // ── Auth ──
+  let redirecting = false;
+  onAuthStateChanged(auth, async (user) => {
+    if (redirecting) return;
+    if (!user) { redirecting=true; window.location.href='index.html'; return; }
+    currentUid = user.uid;
+    const snap = await getDoc(doc(db,'users',currentUid));
+    const data = snap.exists() ? snap.data() : {};
+    document.getElementById('user-name').textContent = [data.prenom||'',data.nom||''].filter(Boolean).join(' ')||user.email;
+    isAdmin = data.role==='admin';
+    if (isAdmin) {
+      document.getElementById('t-admin').style.display = 'block';
+    }
+    loadComps();
+  });
+</script>
+</body>
+</html>

@@ -89,24 +89,24 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
     <div><h1>Plan de course 2026</h1><p>Génépi Groupe Trail · CoachDav</p></div>
   </div>
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-    <span id="uname" style="font-size:13px;color:var(--mut)"></span>
+    <span id="user-name" style="font-size:13px;color:var(--mut)"></span>
     <a href="planning.html" class="btn-h">← Retour planning</a>
-    <button class="btn-h" onclick="window.GGT.logout()">Déconnexion</button>
+    <button class="btn-h" onclick="logout()">Déconnexion</button>
   </div>
 </header>
 
 <div class="main">
   <div class="chooser">
     <label>Mon plan :</label>
-    <button class="pbtn" id="btn-a" onclick="window.GGT.choosePlan('A')">🏔 Plan A — ½ Barjo 50km</button>
-    <button class="pbtn" id="btn-b" onclick="window.GGT.choosePlan('B')">🏃 Plan B — Trail des Tours 28km</button>
-    <button class="pbtn" id="btn-c" onclick="window.GGT.choosePlan('C')">🎯 Plan C — Trail des Tours 15km</button>
+    <button class="pbtn" id="btn-a" onclick="choosePlan('A')">🏔 Plan A — ½ Barjo 50km</button>
+    <button class="pbtn" id="btn-b" onclick="choosePlan('B')">🏃 Plan B — Trail des Tours 28km</button>
+    <button class="pbtn" id="btn-c" onclick="choosePlan('C')">🎯 Plan C — Trail des Tours 15km</button>
     <span class="pdesc" id="pdesc">Sélectionne ton plan</span>
   </div>
   <div class="tabs">
-    <button class="tbtn on" id="t-plan" onclick="window.GGT.switchTab('plan')">📋 Plan d'entraînement</button>
-    <button class="tbtn" id="t-suivi" onclick="window.GGT.switchTab('suivi')">📊 Mon suivi</button>
-    <button class="tbtn" id="t-recap" style="display:none" onclick="window.GGT.switchTab('recap')">👁 Vue CoachDav</button>
+    <button class="tbtn on" id="t-plan" onclick="switchTab('plan')">📋 Plan d'entraînement</button>
+    <button class="tbtn" id="t-suivi" onclick="switchTab('suivi')">📊 Mon suivi</button>
+    <button class="tbtn" id="t-recap" style="display:none" onclick="switchTab('recap')">👁 Vue CoachDav</button>
   </div>
   <div class="tpan on" id="p-plan">
     <div class="loading"><div class="spin"></div> Connexion en cours...</div>
@@ -121,245 +121,216 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
 <div class="toast" id="toast"></div>
 
 <script type="module">
-import { initializeApp }   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const firebaseConfig = {
+  const firebaseConfig = {
     apiKey: "AIzaSyC7a3obsTgqf5An8v1t8fpQWCln-ZbZWpk",
     authDomain: "ggt-planning-30503.firebaseapp.com",
     projectId: "ggt-planning-30503",
     storageBucket: "ggt-planning-30503.firebasestorage.app",
     messagingSenderId: "172309807991",
     appId: "1:172309807991:web:6a66ce809970c10c375772"
-};
-const app  = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db   = getFirestore(app);
+  };
 
-let uid = null, isAdmin = false, currentPlan = null;
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+  let currentUid = null, currentPlan = null, isAdmin = false;
 
-const JOURS = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
-const SENS  = ['','😊','🙂','😐','😓','😰'];
-const SLBL  = ['— Repos','😊 Très facile','🙂 Facile','😐 Normal','😓 Difficile','😰 Très difficile'];
-const DESCS = {
-  A:'🏔 Plan A — ½ Barjo 50km / 1200m D+ · 21 juin 2026',
-  B:'🏃 Plan B — Trail des Tours 28km / 300m D+ · 31 mai 2026',
-  C:'🎯 Plan C — Trail des Tours 15km / 120m D+ · 31 mai 2026'
-};
+  const JOURS = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+  const SENS  = ['','😊','🙂','😐','😓','😰'];
+  const SLBL  = ['— Repos','😊 Très facile','🙂 Facile','😐 Normal','😓 Difficile','😰 Très difficile'];
+  const DESCS = {
+    A:'🏔 Plan A — ½ Barjo 50km / 1200m D+ · 21 juin 2026',
+    B:'🏃 Plan B — Trail des Tours 28km / 300m D+ · 31 mai 2026',
+    C:'🎯 Plan C — Trail des Tours 15km / 120m D+ · 31 mai 2026'
+  };
+  const DATA = {"PHASE 1 — FONCIER": {"info": {"label": "Phase 1 — Foncier & Bases", "period": "23 mars → 19 avril 2026", "color": "#22c55e"}, "weeks": [{"num": "S1", "title": "Mise en route · régularité avant tout", "dates": ["23/03", "24/03", "25/03", "26/03", "27/03", "28/03", "29/03"], "planA": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 20' (EF)\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 12×1' r1' (90-95% VMA)\n+ RAC 10'", "Repos", "Footing 50' (70% VMA)", "1h30-1h40 · TV D+"], "planBC": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 20' (EF)\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 10×1' r1' (90-95% VMA)\n+ RAC 10'", "Repos", "Footing 50' (70%VMA) PlanB\n\nRepos Plan C", "1h30-1h40 · TV"], "note": ""}, {"num": "S2", "title": "Consolidation · légère montée de volume", "dates": ["30/03", "31/03", "01/04", "02/04", "03/04", "04/04", "05/04"], "planA": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 8×côte CE / CCE\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 3×8' r3' (80-85% VMA)\n+ Récupération 10'", "Repos", "Footing 50' (70% VMA) TV", "1h45-2h · TV D+"], "planBC": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 6×côte CE / CCE\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 2×8' r3' (80-85% VMA)\n+ Récupération 10'", "Repos", "Footing 50' (70%VMA) PlanB\n\nRepos Plan C", "1h30-1h40 · TV"], "note": ""}, {"num": "S3", "title": "Charge progressive · intro dénivelé", "dates": ["06/04", "07/04", "08/04", "09/04", "10/04", "11/04", "12/04"], "planA": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 10×côte CB / CE + relance en accélération sur 100m\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ single A/R TD7H\n+ RAC 10'", "Repos\nou \nFooting 50' (70%VMA)\nsi bien récupérerr de la séance de jeudi", "2h00 · 300-400m D+", "Bénévoles\n\nLa Méran'Trail"], "planBC": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 8×côte CB / CE + relance en accélération sur 100m\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ single A TD7H\n+ RAC 10'", "Repos\nou \nFooting 50' (70%VMA)\nsi bien récupérerr de la séance de jeudi", "1h30-1h40 · TV D+", "Bénévoles\n\nLa Méran'Trail"], "note": ""}, {"num": "S4", "title": "⚡ Semaine de récupération — Volume -30% pour TOUS", "dates": ["13/04", "14/04", "15/04", "16/04", "17/04", "18/04", "19/04"], "planA": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 2×(12×30'' r30'')\nR3' (95-100% VMA)\n+ RAC 10'", "Repos", "Footing 1h (55-65% VMA)", "Repos", "Repos", "1h20 · plat"], "planBC": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 2×(10×30'' r30'')\nR3' (95-100% VMA)\n+ RAC 10'", "Repos", "Footing 1h (55-65% VMA)", "Repos", "Repos", "1h20 · plat"], "note": "💬 Note CoachDav : Semaine récup = investissement. Le corps digère les 3 semaines de charge. Jambes lourdes en début de semaine → normal, c'est exactement pour ça qu'on récupère."}]}, "PHASE 2 — DÉVELOPPEMENT": {"info": {"label": "Phase 2 — Développement & Intensité", "period": "20 avril → 17 mai 2026", "color": "#f59e0b"}, "weeks": [{"num": "S5", "title": "Relance · montée d'intensité", "dates": ["20/04", "21/04", "22/04", "23/04", "24/04", "25/04", "26/04"], "planA": ["Repos\nou\nRenforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 10×côte CH / CCH + relance en accélération sur 100m\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 3×10' r3' (82-87% VMA)\n+ RAC 10'", "Repos", "Footing 60' (70% VMA) · TV", "2h10-2h20 TV\n400-500m D+"], "planBC": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 7×côte CH / CCH + relance en accélération sur 100m\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 2×10' r3' (82-87% VMA)\n+ RAC 10'", "Repos", "Footing 50' (70%VMA) PlanB\n\nRepos Plan C", "1h35-1h45 TV\n250-300m D+"], "note": ""}, {"num": "S6", "title": "Charge · séances qualité", "dates": ["27/04", "28/04", "29/04", "30/04", "01/05", "02/05", "03/05"], "planA": ["Repos\nou\nRenforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 10×1' côte CB / GOR\nR descente trot\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 6×4' r1'30 (88-93% VMA)\n+ RAC 10'", "Repos", "Footing 50' (70% VMA) · TP", "2h20-2h30 TV\n500-600m D+"], "planBC": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 6 à 8×1' côte CB / GOR\nR descente trot\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 5×4' r1'30 (88-93% VMA)\n+ RAC 10'", "Repos", "Footing 50' (70%VMA) PlanB\n\nRepos Plan C", "1h40-1h50 TV\n300-350m D+"], "note": ""}, {"num": "S7", "title": "Charge maximale phase 2 · test ravitaillement", "dates": ["04/05", "05/05", "06/05", "07/05", "08/05", "09/05", "10/05"], "planA": ["Repos\nou\nRenforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 10×côte CE / CCE + relance en accélération sur 100m\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ single A/R/A TD7H\n+ RAC 10'", "Repos", "Footing 1h (70% VMA) · TV", "2h30-2h45 TV\n600-700m D+\nTester gel, boisson, barre"], "planBC": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 6×côte CE / CCE + relance en accélération sur 100m\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ single A/R TD7H\n+ RAC 10'", "Repos", "Footing 50' (70%VMA) PlanB\n\nRepos Plan C", "1h45-2h TV\n300m D+"], "note": ""}, {"num": "S8", "title": "⚡ Récupération pré-stage · arriver frais à Valloire", "dates": ["11/05", "12/05", "13/05", "14/05", "15/05", "16/05", "17/05"], "planA": ["Repos", "Repos\nou\nFooting 45' (55-65% VMA)", "🚗 Route Valloire\nTrajet · installation · dîner · repos · coucher tôt", "Sortie J1 - G1", "Sortie J2 - G1", "Sortie J3 - G1", "🏠 Retour · repos · sommeil ++"], "planBC": ["Repos", "Repos\nou\nFooting 45' (55-65% VMA)", "🚗 Route Valloire\nTrajet · installation · dîner · repos · coucher tôt", "Sortie J1 - G2", "Sortie J2 - G2", "Sortie J3 - G2", "🏠 Retour · repos · sommeil ++"], "note": "💬 Le repos fait partie intégrante du programme, au même titre que l'exercice ; il est tout aussi essentiel. Ne le négligez pas."}]}, "PHASE 3 — TRAIL DES TOURS": {"info": {"label": "Phase 3 — Post-Valloire & Trail des Tours", "period": "18 mai → 31 mai 2026", "color": "#4f8ef7"}, "weeks": [{"num": "S9", "title": "Récupération post-stage · affûtage Trail des Tours", "dates": ["18/05", "19/05", "20/05", "21/05", "22/05", "23/05", "24/05"], "planA": ["Repos\n\nPlanifier un RDV chez l'OSTEO", "Footing 1h (55-65% VMA)", "Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 2×8' r3' (82-85% VMA)\n+ RAC 10'", "Repos", "Footing 50' (70% VMA) · TV", "1h45-2h · 300-400m D+\nallure Trail des Tours"], "planBC": ["Repos\n\nPlanifier un RDV chez l'OSTEO", "Footing 1h (55-65% VMA)", "Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 2×6' r3' (82-85% VMA)\n+ RAC 10'", "Repos", "Footing 50' (70%VMA)", "1h30 dont 2×10' r3'\nallure Trail des Tours"], "note": ""}, {"num": "S10", "title": "🎯 Semaine Trail des Tours · affûtage final", "dates": ["25/05", "26/05", "27/05", "28/05", "29/05", "30/05", "31/05"], "planA": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 4×20'' accélérations\n+ RAC 10'", "Repos", "Repos", "Repos", "Trot réveil 20-25'\n65% VMA · activer les jambes\nDormir tôt · hydratation max", "🎯 Trail des Tours · 28km\n28km / 300m D+\nMontfort-l'Amaury\n⚠ galop d'essai → 80-85% max\nTester nutrition + matériel pour la Barjo"], "planBC": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 4×20'' accélérations\n+ RAC 10'\n\nou REPOS", "Repos", "Repos", "Repos", "Trot réveil 20-25'\n65% VMA · activer les jambes\nDormir tôt · hydratation max", "🏆 Trail des Tours · 28km\n28km / 300m D+\nMontfort-l'Amaury\nC'est VOTRE course !"], "note": "💬 Plan A → galop d'essai, pas une guerre. La vraie bataille c'est le 21 juin ! / Plan B → votre objectif, courez selon vos sensations ! / Plan C → le 15km se court plus vite, gérez dès le km 1. Bonne course à tous ! 🎉"}]}, "PHASE 4 — BARJO (Plan A)": {"info": {"label": "Phase 4 — Affûtage Barjo (Plan A)", "period": "1 → 21 juin 2026", "color": "#fc4c02"}, "weeks": [{"num": "S11", "title": "Récupération Trail des Tours · relance Barjo", "dates": ["01/06", "02/06", "03/06", "04/06", "05/06", "06/06", "07/06"], "planA": ["Repos complet", "Footing 1h (55-65% VMA)", "Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 8×1' r1' (90-95% VMA)\n+ RAC 10'", "Repos", "Footing 45' (70% VMA) · TV", "2h30 TV\n700m D+\n30' allure Barjo cible en milieu"], "planBC": ["Félicitations ! 🎉\nTrail des Tours terminé", "Repos", "Repos", "Repos", "Repos", "Repos", "Repos"], "note": ""}, {"num": "S12", "title": "Affûtage · volume en baisse, qualité maintenue", "dates": ["08/06", "09/06", "10/06", "11/06", "12/06", "13/06", "14/06"], "planA": ["Repos\n\nPlanifier un RDV chez l'OSTEO", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 2×8' r3' (82-85% VMA)\n+ RAC 10'", "Repos", "Footing 1h (55-65% VMA)", "Repos", "Footing 40' (55-65% VMA)\n + 4×20'' accélérations\n+ RAC 10'", "1h30 TV\n200-300m D+"], "planBC": ["Repos", "Repos", "Repos", "Repos", "Repos", "Repos", "Repos"], "note": ""}, {"num": "S13", "title": "🎯 SEMAINE BARJO · Dernière ligne droite", "dates": ["15/06", "16/06", "17/06", "18/06", "19/06", "20/06", "21/06"], "planA": ["Repos", "Repos", "Repos", "Repos", "Repos", "Trot réveil 20-25'\n65% VMA · activer les jambes\nDormir tôt · hydratation max", "🎯 ½ BARJO TRAIL\n50km / 1200m D+\nDépart 10h00\nBarrière horaire max 8h20"], "planBC": ["Repos", "Repos", "Repos", "Repos", "Repos", "Repos", "Repos"], "note": "💬 Matériel obligatoire Barjo : Dossard visible · Couverture de survie · Sifflet · Téléphone chargé · Eau 500ml min · Coupe-vent. Bâtons autorisés."}]}};
 
-const DATA = {"PHASE 1 — FONCIER": {"info": {"label": "Phase 1 — Foncier & Bases", "period": "23 mars → 19 avril 2026", "color": "#22c55e"}, "weeks": [{"num": "S1", "title": "Mise en route · régularité avant tout", "dates": ["23/03", "24/03", "25/03", "26/03", "27/03", "28/03", "29/03"], "planA": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 20' (EF)\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 12×1' r1' (90-95% VMA)\n+ RAC 10'", "Repos", "Footing 50' (70% VMA)", "1h30-1h40 · TV D+"], "planBC": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 20' (EF)\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 10×1' r1' (90-95% VMA)\n+ RAC 10'", "Repos", "Footing 50' (70%VMA) PlanB\n\nRepos Plan C", "1h30-1h40 · TV"], "note": ""}, {"num": "S2", "title": "Consolidation · légère montée de volume", "dates": ["30/03", "31/03", "01/04", "02/04", "03/04", "04/04", "05/04"], "planA": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 8×côte CE / CCE\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 3×8' r3' (80-85% VMA)\n+ Récupération 10'", "Repos", "Footing 50' (70% VMA) TV", "1h45-2h · TV D+"], "planBC": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 6×côte CE / CCE\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 2×8' r3' (80-85% VMA)\n+ Récupération 10'", "Repos", "Footing 50' (70%VMA) PlanB\n\nRepos Plan C", "1h30-1h40 · TV"], "note": ""}, {"num": "S3", "title": "Charge progressive · intro dénivelé", "dates": ["06/04", "07/04", "08/04", "09/04", "10/04", "11/04", "12/04"], "planA": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 10×côte CB / CE + relance en accélération sur 100m\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ single A/R TD7H\n+ RAC 10'", "Repos\nou \nFooting 50' (70%VMA)\nsi bien récupérerr de la séance de jeudi", "2h00 · 300-400m D+", "Bénévoles\n\nLa Méran'Trail"], "planBC": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 8×côte CB / CE + relance en accélération sur 100m\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ single A TD7H\n+ RAC 10'", "Repos\nou \nFooting 50' (70%VMA)\nsi bien récupérerr de la séance de jeudi", "1h30-1h40 · TV D+", "Bénévoles\n\nLa Méran'Trail"], "note": ""}, {"num": "S4", "title": "⚡ Semaine de récupération — Volume -30% pour TOUS", "dates": ["13/04", "14/04", "15/04", "16/04", "17/04", "18/04", "19/04"], "planA": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 2×(12×30'' r30'')\nR3' (95-100% VMA)\n+ RAC 10'", "Repos", "Footing 1h (55-65% VMA)", "Repos", "Repos", "1h20 · plat"], "planBC": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 2×(10×30'' r30'')\nR3' (95-100% VMA)\n+ RAC 10'", "Repos", "Footing 1h (55-65% VMA)", "Repos", "Repos", "1h20 · plat"], "note": "💬 Note CoachDav : Semaine récup = investissement. Le corps digère les 3 semaines de charge. Jambes lourdes en début de semaine → normal, c'est exactement pour ça qu'on récupère."}]}, "PHASE 2 — DÉVELOPPEMENT": {"info": {"label": "Phase 2 — Développement & Intensité", "period": "20 avril → 17 mai 2026", "color": "#f59e0b"}, "weeks": [{"num": "S5", "title": "Relance · montée d'intensité", "dates": ["20/04", "21/04", "22/04", "23/04", "24/04", "25/04", "26/04"], "planA": ["Repos\nou\nRenforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 10×côte CH / CCH + relance en accélération sur 100m\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 3×10' r3' (82-87% VMA)\n+ RAC 10'", "Repos", "Footing 60' (70% VMA) · TV", "2h10-2h20 TV\n400-500m D+"], "planBC": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 7×côte CH / CCH + relance en accélération sur 100m\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 2×10' r3' (82-87% VMA)\n+ RAC 10'", "Repos", "Footing 50' (70%VMA) PlanB\n\nRepos Plan C", "1h35-1h45 TV\n250-300m D+"], "note": ""}, {"num": "S6", "title": "Charge · séances qualité", "dates": ["27/04", "28/04", "29/04", "30/04", "01/05", "02/05", "03/05"], "planA": ["Repos\nou\nRenforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 10×1' côte CB / GOR\nR descente trot\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 6×4' r1'30 (88-93% VMA)\n+ RAC 10'", "Repos", "Footing 50' (70% VMA) · TP", "2h20-2h30 TV\n500-600m D+"], "planBC": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 6 à 8×1' côte CB / GOR\nR descente trot\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 5×4' r1'30 (88-93% VMA)\n+ RAC 10'", "Repos", "Footing 50' (70%VMA) PlanB\n\nRepos Plan C", "1h40-1h50 TV\n300-350m D+"], "note": ""}, {"num": "S7", "title": "Charge maximale phase 2 · test ravitaillement", "dates": ["04/05", "05/05", "06/05", "07/05", "08/05", "09/05", "10/05"], "planA": ["Repos\nou\nRenforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 10×côte CE / CCE + relance en accélération sur 100m\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ single A/R/A TD7H\n+ RAC 10'", "Repos", "Footing 1h (70% VMA) · TV", "2h30-2h45 TV\n600-700m D+\nTester gel, boisson, barre"], "planBC": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 6×côte CE / CCE + relance en accélération sur 100m\n+ RAC 10'", "Renforcement\nMusculaire", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ single A/R TD7H\n+ RAC 10'", "Repos", "Footing 50' (70%VMA) PlanB\n\nRepos Plan C", "1h45-2h TV\n300m D+"], "note": ""}, {"num": "S8", "title": "⚡ Récupération pré-stage · arriver frais à Valloire", "dates": ["11/05", "12/05", "13/05", "14/05", "15/05", "16/05", "17/05"], "planA": ["Repos", "Repos\nou\nFooting 45' (55-65% VMA)", "🚗 Route Valloire\nTrajet · installation · dîner · repos · coucher tôt", "Sortie J1 - G1", "Sortie J2 - G1", "Sortie J3 - G1", "🏠 Retour · repos · sommeil ++"], "planBC": ["Repos", "Repos\nou\nFooting 45' (55-65% VMA)", "🚗 Route Valloire\nTrajet · installation · dîner · repos · coucher tôt", "Sortie J1 - G2", "Sortie J2 - G2", "Sortie J3 - G2", "🏠 Retour · repos · sommeil ++"], "note": "💬 Le repos fait partie intégrante du programme, au même titre que l'exercice ; il est tout aussi essentiel. Ne le négligez pas."}]}, "PHASE 3 — TRAIL DES TOURS": {"info": {"label": "Phase 3 — Post-Valloire & Trail des Tours", "period": "18 mai → 31 mai 2026", "color": "#4f8ef7"}, "weeks": [{"num": "S9", "title": "Récupération post-stage · affûtage Trail des Tours", "dates": ["18/05", "19/05", "20/05", "21/05", "22/05", "23/05", "24/05"], "planA": ["Repos\n\nPlanifier un RDV chez l'OSTEO", "Footing 1h (55-65% VMA)", "Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 2×8' r3' (82-85% VMA)\n+ RAC 10'", "Repos", "Footing 50' (70% VMA) · TV", "1h45-2h · 300-400m D+\nallure Trail des Tours"], "planBC": ["Repos\n\nPlanifier un RDV chez l'OSTEO", "Footing 1h (55-65% VMA)", "Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 2×6' r3' (82-85% VMA)\n+ RAC 10'", "Repos", "Footing 50' (70%VMA)", "1h30 dont 2×10' r3'\nallure Trail des Tours"], "note": ""}, {"num": "S10", "title": "🎯 Semaine Trail des Tours · affûtage final", "dates": ["25/05", "26/05", "27/05", "28/05", "29/05", "30/05", "31/05"], "planA": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 4×20'' accélérations\n+ RAC 10'", "Repos", "Repos", "Repos", "Trot réveil 20-25'\n65% VMA · activer les jambes\nDormir tôt · hydratation max", "🎯 Trail des Tours · 28km\n28km / 300m D+\nMontfort-l'Amaury\n⚠ galop d'essai → 80-85% max\nTester nutrition + matériel pour la Barjo"], "planBC": ["Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 4×20'' accélérations\n+ RAC 10'\n\nou REPOS", "Repos", "Repos", "Repos", "Trot réveil 20-25'\n65% VMA · activer les jambes\nDormir tôt · hydratation max", "🏆 Trail des Tours · 28km\n28km / 300m D+\nMontfort-l'Amaury\nC'est VOTRE course !"], "note": "💬 Plan A → galop d'essai, pas une guerre. La vraie bataille c'est le 21 juin ! / Plan B → votre objectif, courez selon vos sensations ! / Plan C → le 15km se court plus vite, gérez dès le km 1. Bonne course à tous ! 🎉"}]}, "PHASE 4 — BARJO (Plan A)": {"info": {"label": "Phase 4 — Affûtage Barjo (Plan A)", "period": "1 → 21 juin 2026", "color": "#fc4c02"}, "weeks": [{"num": "S11", "title": "Récupération Trail des Tours · relance Barjo", "dates": ["01/06", "02/06", "03/06", "04/06", "05/06", "06/06", "07/06"], "planA": ["Repos complet", "Footing 1h (55-65% VMA)", "Repos", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 8×1' r1' (90-95% VMA)\n+ RAC 10'", "Repos", "Footing 45' (70% VMA) · TV", "2h30 TV\n700m D+\n30' allure Barjo cible en milieu"], "planBC": ["Félicitations ! 🎉\nTrail des Tours terminé", "Repos", "Repos", "Repos", "Repos", "Repos", "Repos"], "note": ""}, {"num": "S12", "title": "Affûtage · volume en baisse, qualité maintenue", "dates": ["08/06", "09/06", "10/06", "11/06", "12/06", "13/06", "14/06"], "planA": ["Repos\n\nPlanifier un RDV chez l'OSTEO", "Footing 20' (55-65% VMA)\n+ Gammes 10'\n+ 2×8' r3' (82-85% VMA)\n+ RAC 10'", "Repos", "Footing 1h (55-65% VMA)", "Repos", "Footing 40' (55-65% VMA)\n + 4×20'' accélérations\n+ RAC 10'", "1h30 TV\n200-300m D+"], "planBC": ["Repos", "Repos", "Repos", "Repos", "Repos", "Repos", "Repos"], "note": ""}, {"num": "S13", "title": "🎯 SEMAINE BARJO · Dernière ligne droite", "dates": ["15/06", "16/06", "17/06", "18/06", "19/06", "20/06", "21/06"], "planA": ["Repos", "Repos", "Repos", "Repos", "Repos", "Trot réveil 20-25'\n65% VMA · activer les jambes\nDormir tôt · hydratation max", "🎯 ½ BARJO TRAIL\n50km / 1200m D+\nDépart 10h00\nBarrière horaire max 8h20"], "planBC": ["Repos", "Repos", "Repos", "Repos", "Repos", "Repos", "Repos"], "note": "💬 Matériel obligatoire Barjo : Dossard visible · Couverture de survie · Sifflet · Téléphone chargé · Eau 500ml min · Coupe-vent. Bâtons autorisés."}]}};
+  function phaseColor(n) {
+    if (n.indexOf('FONCIER')>=0)    return '#22c55e';
+    if (n.indexOf('BARJO')>=0)      return '#fc4c02';
+    if (n.indexOf('TRAIL')>=0)      return '#4f8ef7';
+    return '#f59e0b';
+  }
+  function hexRgb(h) { return parseInt(h.slice(1,3),16)+','+parseInt(h.slice(3,5),16)+','+parseInt(h.slice(5,7),16); }
+  function dayClass(t) {
+    if (!t||t.toLowerCase().startsWith('repos')) return 'repos';
+    if (t.indexOf('BARJO')>=0||t.indexOf('Trail des Tours')>=0||t.indexOf('🎯')>=0||t.indexOf('🏆')>=0) return 'course';
+    if (t.toLowerCase().indexOf('récup')>=0) return 'recup';
+    return '';
+  }
+  function showToast(msg, err) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = 'toast show'+(err?' err':'');
+    setTimeout(()=>t.className='toast'+(err?' err':''), 3000);
+  }
 
-function phaseColor(name) {
-  if (name.indexOf('FONCIER')>=0)    return '#22c55e';
-  if (name.indexOf('BARJO')>=0)      return '#fc4c02';
-  if (name.indexOf('TRAIL')>=0)      return '#4f8ef7';
-  return '#f59e0b';
-}
-function hexRgb(h) {
-  return parseInt(h.slice(1,3),16)+','+parseInt(h.slice(3,5),16)+','+parseInt(h.slice(5,7),16);
-}
-function dayClass(t) {
-  if (!t || t.toLowerCase().startsWith('repos')) return 'repos';
-  if (t.indexOf('BARJO')>=0||t.indexOf('Trail des Tours')>=0||t.indexOf('🎯')>=0||t.indexOf('🏆')>=0) return 'course';
-  if (t.toLowerCase().indexOf('récup')>=0) return 'recup';
-  return '';
-}
-
-function toast(msg, err) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show'+(err?' err':'');
-  setTimeout(()=>t.className='toast'+(err?' err':''), 3000);
-}
-
-function buildPlan(plan) {
-  let h = '';
-  for (const [pname, phase] of Object.entries(DATA)) {
-    if (pname.indexOf('BARJO')>=0 && plan!=='A') continue;
-    const col = phaseColor(pname);
-    const rgb = hexRgb(col);
-    h += `<div class="ph-block">
-      <div class="ph-head" style="background:rgba(${rgb},.06);border-color:rgba(${rgb},.25)">
-        <div class="ph-dot" style="background:${col}"></div>
-        <span class="ph-title">${phase.info.label}</span>
-        <span class="ph-period">${phase.info.period}</span>
-      </div>`;
-    for (const w of phase.weeks) {
-      const days = plan==='A' ? w.planA : w.planBC;
-      h += `<div class="wk-block">
-        <div class="wk-head"><span class="wk-num">${w.num}</span><span class="wk-title">${w.title}</span></div>
-        <div class="wk-grid">`;
-      for (let i=0;i<7;i++) {
-        const txt = (days&&days[i]) ? days[i] : 'Repos';
-        h += `<div class="dc">
-          <div class="dh">${JOURS[i]}<span>${w.dates[i]||''}</span></div>
-          <div class="dcell ${dayClass(txt)}">${txt}</div>
+  function buildPlan(plan) {
+    let h = '';
+    for (const [pname, phase] of Object.entries(DATA)) {
+      if (pname.indexOf('BARJO')>=0 && plan!=='A') continue;
+      const col = phaseColor(pname), rgb = hexRgb(col);
+      h += `<div class="ph-block">
+        <div class="ph-head" style="background:rgba(${rgb},.06);border-color:rgba(${rgb},.25)">
+          <div class="ph-dot" style="background:${col}"></div>
+          <span class="ph-title">${phase.info.label}</span>
+          <span class="ph-period">${phase.info.period}</span>
         </div>`;
-      }
-      h += '</div>';
-      if (w.note) h += `<div class="wk-note">${w.note}</div>`;
-      h += '</div>';
-    }
-    h += '</div>';
-  }
-  return h;
-}
-
-function buildSuivi(plan, saved) {
-  let h = '<p style="font-size:12px;color:var(--mut);margin-bottom:16px;">Remplis tes sensations après chaque séance puis clique Sauvegarder.</p>';
-  for (const [pname, phase] of Object.entries(DATA)) {
-    if (pname.indexOf('BARJO')>=0 && plan!=='A') continue;
-    for (const w of phase.weeks) {
-      const wk = 'w_'+w.num;
-      let cumKm=0, cumDp=0;
-      for (let i=0;i<7;i++) {
-        cumKm += parseFloat(saved[wk+'_km'+i]||0);
-        cumDp  += parseFloat(saved[wk+'_dp'+i]||0);
-      }
-      h += `<div class="sv-wrap">
-        <div class="sv-wktitle">${w.num} — ${w.title}</div>
-        <div class="sv-grid">`;
-      for (let i=0;i<7;i++) {
-        const sv=saved[wk+'_sens'+i]||'', km=saved[wk+'_km'+i]||'', dp=saved[wk+'_dp'+i]||'';
-        const opts = SLBL.map((l,idx)=>`<option value="${SENS[idx]}" ${SENS[idx]===sv?'selected':''}>${l}</option>`).join('');
-        h += `<div class="sv-day">
-          <div class="sv-dh">${JOURS[i]}<span>${w.dates[i]||''}</span></div>
-          <div class="sv-db">
-            <select class="sv-sel" id="${wk}_sens${i}">${opts}</select>
-            <input class="sv-inp" type="number" step="0.1" min="0" placeholder="km" id="${wk}_km${i}" value="${km}">
-            <input class="sv-inp" type="number" step="10"  min="0" placeholder="D+" id="${wk}_dp${i}" value="${dp}">
-          </div>
-        </div>`;
-      }
-      h += `</div>
-        <div class="sv-foot">
-          <div class="cumul">Cumul : <strong>${cumKm.toFixed(1)} km</strong> · <strong>${Math.round(cumDp)} m D+</strong></div>
-          <button class="btn-sv" onclick="window.GGT.saveSuivi('${wk}')">💾 Sauvegarder</button>
-        </div>
-      </div>`;
-    }
-  }
-  return h;
-}
-
-async function choosePlan(plan) {
-  currentPlan = plan;
-  ['a','b','c'].forEach(x => document.getElementById('btn-'+x).className='pbtn');
-  document.getElementById('btn-'+plan.toLowerCase()).classList.add('p'+plan.toLowerCase());
-  document.getElementById('pdesc').textContent = DESCS[plan]||'';
-  // Afficher le plan immédiatement
-  document.getElementById('p-plan').innerHTML = buildPlan(plan);
-  // Charger suivi
-  let saved = {};
-  if (uid) {
-    try {
-      const snap = await getDoc(doc(db,'suivi_course',uid));
-      if (snap.exists()) saved = snap.data();
-    } catch(e) {}
-    try { await setDoc(doc(db,'suivi_course',uid),{_plan:plan},{merge:true}); } catch(e) {}
-  }
-  document.getElementById('p-suivi').innerHTML = buildSuivi(plan, saved);
-}
-
-async function saveSuivi(wk) {
-  if (!uid) { toast('Non connecté',true); return; }
-  const data = {_plan: currentPlan};
-  let cumKm=0, cumDp=0;
-  for (let i=0;i<7;i++) {
-    data[wk+'_sens'+i] = document.getElementById(wk+'_sens'+i)?.value||'';
-    data[wk+'_km'+i]   = document.getElementById(wk+'_km'+i)?.value||'';
-    data[wk+'_dp'+i]   = document.getElementById(wk+'_dp'+i)?.value||'';
-    cumKm += parseFloat(data[wk+'_km'+i]||0);
-    cumDp  += parseFloat(data[wk+'_dp'+i]||0);
-  }
-  data[wk+'_cumkm'] = cumKm.toFixed(1);
-  data[wk+'_cumdp'] = Math.round(cumDp);
-  try {
-    await setDoc(doc(db,'suivi_course',uid), data, {merge:true});
-    toast('✓ Suivi sauvegardé !');
-  } catch(e) { toast('Erreur : '+e.message, true); }
-}
-
-async function loadRecap() {
-  if (!isAdmin) return;
-  const div = document.getElementById('p-recap');
-  div.innerHTML = '<div class="loading"><div class="spin"></div> Chargement...</div>';
-  try {
-    const usersSnap = await getDocs(collection(db,'users'));
-    const allUsers = [];
-    usersSnap.forEach(d => allUsers.push({uid:d.id,...d.data(),plan:'?'}));
-    const users=[], suivis={};
-    for (const u of allUsers) {
-      try {
-        const snap = await getDoc(doc(db,'suivi_course',u.uid));
-        if (snap.exists()) {
-          const sd=snap.data(); suivis[u.uid]=sd; u.plan=sd._plan||'?';
-          if (Object.keys(sd).some(k=>(k.includes('_sens')||k.includes('_km'))&&sd[k])) users.push(u);
-        }
-      } catch(e) {}
-    }
-    if (!users.length) { div.innerHTML='<p style="color:var(--mut);font-size:13px;padding:20px 0">Aucun adhérent n'a encore rempli son suivi.</p>'; return; }
-    let html='';
-    for (const [pname,phase] of Object.entries(DATA)) {
-      html+=`<h3 style="font-size:12px;color:var(--mut);margin:20px 0 8px;text-transform:uppercase;letter-spacing:.06em">${phase.info.label}</h3>`;
       for (const w of phase.weeks) {
-        const wk='w_'+w.num;
-        html+=`<div class="rtw"><table class="rt"><thead><tr><th style="text-align:left">Adhérent</th><th>Plan</th>`;
-        for (let i=0;i<7;i++) html+=`<th>${JOURS[i]}<br><span style="font-weight:400;font-size:8px;opacity:.7">${w.dates[i]||''}</span></th>`;
-        html+=`<th>km</th><th>D+</th></tr></thead><tbody>`;
-        for (const u of users) {
-          const sd=suivis[u.uid]||{};
-          const pc=u.plan==='A'?'#fc4c02':u.plan==='B'?'#4f8ef7':u.plan==='C'?'#22c55e':'var(--mut)';
-          html+=`<tr><td class="tdn">${u.prenom||''} ${u.nom||''}</td><td style="color:${pc};font-weight:700;font-size:11px">${u.plan}</td>`;
-          for (let i=0;i<7;i++) {
-            const sens=sd[wk+'_sens'+i]||'', km=sd[wk+'_km'+i]||'';
-            html+=`<td><div style="font-size:14px">${sens||'—'}</div>${km?`<div style="font-size:10px;color:var(--mut)">${km}km</div>`:''}</td>`;
-          }
-          html+=`<td style="color:var(--acc);font-weight:600">${sd[wk+'_cumkm']||'0'}</td><td style="color:var(--mut)">${sd[wk+'_cumdp']||'0'}m</td></tr>`;
+        const days = plan==='A' ? w.planA : w.planBC;
+        h += `<div class="wk-block">
+          <div class="wk-head"><span class="wk-num">${w.num}</span><span class="wk-title">${w.title}</span></div>
+          <div class="wk-grid">`;
+        for (let i=0;i<7;i++) {
+          const txt = (days&&days[i]) ? days[i] : 'Repos';
+          h += `<div class="dc"><div class="dh">${JOURS[i]}<span>${w.dates[i]||''}</span></div><div class="dcell ${dayClass(txt)}">${txt}</div></div>`;
         }
-        html+=`</tbody></table></div>`;
+        h += '</div>';
+        if (w.note) h += `<div class="wk-note">${w.note}</div>`;
+        h += '</div>';
+      }
+      h += '</div>';
+    }
+    return h;
+  }
+
+  function buildSuivi(plan, saved) {
+    let h = '<p style="font-size:12px;color:var(--mut);margin-bottom:16px;">Remplis tes sensations après chaque séance puis clique Sauvegarder.</p>';
+    for (const [pname, phase] of Object.entries(DATA)) {
+      if (pname.indexOf('BARJO')>=0 && plan!=='A') continue;
+      for (const w of phase.weeks) {
+        const wk = 'w_'+w.num;
+        let cumKm=0, cumDp=0;
+        for (let i=0;i<7;i++) { cumKm+=parseFloat(saved[wk+'_km'+i]||0); cumDp+=parseFloat(saved[wk+'_dp'+i]||0); }
+        h += `<div class="sv-wrap"><div class="sv-wktitle">${w.num} — ${w.title}</div><div class="sv-grid">`;
+        for (let i=0;i<7;i++) {
+          const sv=saved[wk+'_sens'+i]||'', km=saved[wk+'_km'+i]||'', dp=saved[wk+'_dp'+i]||'';
+          const opts = SLBL.map((l,idx)=>`<option value="${SENS[idx]}" ${SENS[idx]===sv?'selected':''}>${l}</option>`).join('');
+          h += `<div class="sv-day">
+            <div class="sv-dh">${JOURS[i]}<span>${w.dates[i]||''}</span></div>
+            <div class="sv-db">
+              <select class="sv-sel" id="${wk}_sens${i}">${opts}</select>
+              <input class="sv-inp" type="number" step="0.1" min="0" placeholder="km" id="${wk}_km${i}" value="${km}">
+              <input class="sv-inp" type="number" step="10"  min="0" placeholder="D+" id="${wk}_dp${i}" value="${dp}">
+            </div>
+          </div>`;
+        }
+        h += `</div><div class="sv-foot">
+          <div class="cumul">Cumul : <strong>${cumKm.toFixed(1)} km</strong> · <strong>${Math.round(cumDp)} m D+</strong></div>
+          <button class="btn-sv" onclick="saveSuivi('${wk}')">💾 Sauvegarder</button>
+        </div></div>`;
       }
     }
-    div.innerHTML=html;
-  } catch(e) { div.innerHTML=`<p style="color:#ff6b6b;font-size:13px">Erreur : ${e.message}</p>`; }
-}
+    return h;
+  }
 
-function switchTab(name) {
-  ['plan','suivi','recap'].forEach(n=>{
-    document.getElementById('p-'+n).className='tpan'+(n===name?' on':'');
-    document.getElementById('t-'+n).className='tbtn'+(n===name?' on':'');
-  });
-  if (name==='recap') loadRecap();
-}
+  window.choosePlan = async function(plan) {
+    currentPlan = plan;
+    ['a','b','c'].forEach(x => document.getElementById('btn-'+x).className='pbtn');
+    document.getElementById('btn-'+plan.toLowerCase()).classList.add('p'+plan.toLowerCase());
+    document.getElementById('pdesc').textContent = DESCS[plan]||'';
+    document.getElementById('p-plan').innerHTML = buildPlan(plan);
+    let saved = {};
+    if (currentUid) {
+      try { const s=await getDoc(doc(db,'suivi_course',currentUid)); if(s.exists()) saved=s.data(); } catch(e) {}
+      try { await setDoc(doc(db,'suivi_course',currentUid),{_plan:plan},{merge:true}); } catch(e) {}
+    }
+    document.getElementById('p-suivi').innerHTML = buildSuivi(plan, saved);
+  };
 
-// Exposer sur window pour les onclick HTML
-window.GGT = { choosePlan, saveSuivi, switchTab, logout: ()=>signOut(auth).then(()=>window.location.href='index.html') };
+  window.saveSuivi = async function(wk) {
+    if (!currentUid) { showToast('Non connecté',true); return; }
+    const data = {_plan: currentPlan};
+    let cumKm=0, cumDp=0;
+    for (let i=0;i<7;i++) {
+      data[wk+'_sens'+i] = document.getElementById(wk+'_sens'+i)?.value||'';
+      data[wk+'_km'+i]   = document.getElementById(wk+'_km'+i)?.value||'';
+      data[wk+'_dp'+i]   = document.getElementById(wk+'_dp'+i)?.value||'';
+      cumKm+=parseFloat(data[wk+'_km'+i]||0);
+      cumDp +=parseFloat(data[wk+'_dp'+i]||0);
+    }
+    data[wk+'_cumkm'] = cumKm.toFixed(1);
+    data[wk+'_cumdp'] = Math.round(cumDp);
+    try { await setDoc(doc(db,'suivi_course',currentUid),data,{merge:true}); showToast('✓ Suivi sauvegardé !'); }
+    catch(e) { showToast('Erreur : '+e.message,true); }
+  };
 
-// Auth
-let redirecting = false;
-onAuthStateChanged(auth, async (user) => {
-  if (redirecting) return;
-  if (!user) { redirecting=true; window.location.href='index.html'; return; }
-  uid = user.uid;
-  try {
-    const snap = await getDoc(doc(db,'users',uid));
+  window.switchTab = function(name) {
+    ['plan','suivi','recap'].forEach(n => {
+      document.getElementById('p-'+n).className = 'tpan'+(n===name?' on':'');
+      document.getElementById('t-'+n).className = 'tbtn'+(n===name?' on':'');
+    });
+    if (name==='recap') loadRecap();
+  };
+
+  window.logout = () => signOut(auth).then(()=>window.location.href='index.html');
+
+  async function loadRecap() {
+    if (!isAdmin) return;
+    const div = document.getElementById('p-recap');
+    div.innerHTML = '<div class="loading"><div class="spin"></div> Chargement...</div>';
+    try {
+      const usersSnap = await getDocs(collection(db,'users'));
+      const allUsers = [];
+      usersSnap.forEach(d => allUsers.push({uid:d.id, prenom:d.data().prenom||'', nom:d.data().nom||'', plan:'?'}));
+      const users=[], suivis={};
+      for (const u of allUsers) {
+        try {
+          const snap = await getDoc(doc(db,'suivi_course',u.uid));
+          if (snap.exists()) {
+            const sd=snap.data(); suivis[u.uid]=sd; u.plan=sd._plan||'?';
+            if (Object.keys(sd).some(k=>(k.includes('_sens')||k.includes('_km'))&&sd[k]&&sd[k]!=='')) users.push(u);
+          }
+        } catch(e) {}
+      }
+      if (!users.length) { div.innerHTML='<p style="color:var(--mut);font-size:13px;padding:20px 0">Aucun adhérent n'a encore rempli son suivi.</p>'; return; }
+      let html='';
+      for (const [pname,phase] of Object.entries(DATA)) {
+        html+=`<h3 style="font-size:12px;color:var(--mut);margin:20px 0 8px;text-transform:uppercase;letter-spacing:.06em">${phase.info.label}</h3>`;
+        for (const w of phase.weeks) {
+          const wk='w_'+w.num;
+          html+=`<div class="rtw"><table class="rt"><thead><tr><th style="text-align:left">Adhérent</th><th>Plan</th>`;
+          for (let i=0;i<7;i++) html+=`<th>${JOURS[i]}<br><span style="font-weight:400;font-size:8px;opacity:.7">${w.dates[i]||''}</span></th>`;
+          html+=`<th>km</th><th>D+</th></tr></thead><tbody>`;
+          for (const u of users) {
+            const sd=suivis[u.uid]||{};
+            const pc=u.plan==='A'?'#fc4c02':u.plan==='B'?'#4f8ef7':u.plan==='C'?'#22c55e':'var(--mut)';
+            html+=`<tr><td class="tdn">${u.prenom} ${u.nom}</td><td style="color:${pc};font-weight:700;font-size:11px">${u.plan}</td>`;
+            for (let i=0;i<7;i++) {
+              const sens=sd[wk+'_sens'+i]||'', km=sd[wk+'_km'+i]||'';
+              html+=`<td><div style="font-size:14px">${sens||'—'}</div>${km?`<div style="font-size:10px;color:var(--mut)">${km}km</div>`:''}</td>`;
+            }
+            html+=`<td style="color:var(--acc);font-weight:600">${sd[wk+'_cumkm']||'0'}</td><td style="color:var(--mut)">${sd[wk+'_cumdp']||'0'}m</td></tr>`;
+          }
+          html+=`</tbody></table></div>`;
+        }
+      }
+      div.innerHTML=html;
+    } catch(e) { div.innerHTML=`<p style="color:#ff6b6b;font-size:13px">Erreur : ${e.message}</p>`; }
+  }
+
+  let redirecting = false;
+  onAuthStateChanged(auth, async (user) => {
+    if (redirecting) return;
+    if (!user) { redirecting=true; window.location.href='index.html'; return; }
+    currentUid = user.uid;
+    const snap = await getDoc(doc(db,'users',currentUid));
     const data = snap.exists() ? snap.data() : {};
-    document.getElementById('uname').textContent = [data.prenom||'',data.nom||''].filter(Boolean).join(' ')||user.email;
+    document.getElementById('user-name').textContent = [data.prenom||'',data.nom||''].filter(Boolean).join(' ')||user.email;
     isAdmin = data.role==='admin';
     if (isAdmin) document.getElementById('t-recap').style.display='block';
-    // Charger plan sauvegardé
-    const sc = await getDoc(doc(db,'suivi_course',uid));
-    const plan = sc.exists() ? (sc.data()._plan||null) : null;
-    if (plan) {
-      await choosePlan(plan);
-    } else {
-      document.getElementById('p-plan').innerHTML='<p style="color:var(--mut);font-size:14px;padding:40px 0;text-align:center">👆 Sélectionne ton plan ci-dessus pour afficher ton programme</p>';
+    try {
+      const sc = await getDoc(doc(db,'suivi_course',currentUid));
+      const plan = sc.exists() ? (sc.data()._plan||null) : null;
+      if (plan) { await window.choosePlan(plan); }
+      else { document.getElementById('p-plan').innerHTML='<p style="color:var(--mut);font-size:14px;padding:40px 0;text-align:center">👆 Sélectionne ton plan ci-dessus</p>'; }
+    } catch(e) {
+      document.getElementById('p-plan').innerHTML=`<p style="color:#ff6b6b;font-size:13px;padding:20px">Erreur : ${e.message}</p>`;
     }
-  } catch(e) {
-    document.getElementById('p-plan').innerHTML=`<p style="color:#ff6b6b;font-size:13px;padding:20px">Erreur : ${e.message}</p>`;
-  }
-});
+  });
 </script>
 </body>
 </html>

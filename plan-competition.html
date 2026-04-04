@@ -499,7 +499,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
       phases[pname].forEach(w => {
         const monday = getMondayDate(startDate, w.weekIndex);
         const sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
-        const days = w.distances[distIdx] || Array(7).fill('Repos');
+        const days = w.distances[distIdx] || w.distances[String(distIdx)] || Array(7).fill('Repos');
         const dates = Array.from({length:7}, (_,i) => {
           const d = new Date(monday); d.setDate(monday.getDate()+i);
           return d.getDate()+'/'+(d.getMonth()+1);
@@ -817,7 +817,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
       }
       // Trouver l'index de cette distance
       const distIdx = distances.findIndex(d => d.dist === dist || d.label.includes(dist) || dist.includes(d.dist));
-      if (distIdx >= 0) weeksMap[num].distances[distIdx] = days;
+      if (distIdx >= 0) weeksMap[num].distances[String(distIdx)] = days;
     });
 
     const semaines = weekOrder.map(num => weeksMap[num]);
@@ -845,6 +845,12 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
       <div class="preview-dists">${dists}</div>
       <div class="preview-weeks" style="margin-bottom:14px">
         Semaines lues : ${plan.semaines.map(w=>w.num).join(', ')}
+      </div>
+      <div style="font-size:11px;color:var(--mut);margin-bottom:14px;padding:8px;background:var(--surf2);border-radius:8px">
+        <strong style="color:var(--txt)">Vérification S1 :</strong><br>
+        ${plan.semaines[0] ? Object.entries(plan.semaines[0].distances).map(([k,v]) =>
+          `Distance ${k} (${plan.distances[parseInt(k)]?.label||'?'}) : ${v[1]?.substring(0,40)||'vide'}...`
+        ).join('<br>') : 'Aucune semaine lue'}
       </div>
       ${plan.notes ? `<div style="font-size:12px;color:var(--mut);margin-bottom:14px;padding:10px;background:var(--surf2);border-radius:8px">💬 ${plan.notes}</div>` : ''}
       <div class="preview-actions">

@@ -286,7 +286,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
           }
         } catch(e) {}
       }
-      if (!users.length) { div.innerHTML='<p style="color:var(--mut);font-size:13px;padding:20px 0">Aucun adhérent n'a encore rempli son suivi.</p>'; return; }
+      if (!users.length) { div.innerHTML='<p style="color:var(--mut);font-size:13px;padding:20px 0">Aucun adh&eacute;rent n&apos;a encore rempli son suivi.</p>'; return; }
       let html='';
       for (const [pname,phase] of Object.entries(DATA)) {
         html+=`<h3 style="font-size:12px;color:var(--mut);margin:20px 0 8px;text-transform:uppercase;letter-spacing:.06em">${phase.info.label}</h3>`;

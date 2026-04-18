@@ -2,376 +2,582 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GGT — Admin CoachDav</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>GGT — Administration</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --bg: #0d0f14; --surface: #161a23; --surface2: #1e2330;
-    --border: rgba(255,255,255,0.08); --text: #e8eaf0;
-    --muted: #7a8099; --accent: #4f8ef7; --orange: #fc4c02; --green: #22c55e;
-  }
-  html, body { min-height: 100%; }
-  body {
-    background: var(--bg); font-family: 'Outfit', sans-serif; color: var(--text);
-    background-image: radial-gradient(ellipse 80% 60% at 20% 0%, rgba(252,76,2,0.05) 0%, transparent 60%);
-  }
-  header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 16px 24px; border-bottom: 0.5px solid var(--border);
-    background: rgba(22,26,35,0.9); backdrop-filter: blur(10px);
-    position: sticky; top: 0; z-index: 10; flex-wrap: wrap; gap: 8px;
-  }
-  .logo { display: flex; align-items: center; gap: 10px; }
-  .logo-icon {
-    width: 36px; height: 36px; border-radius: 9px;
-    background: linear-gradient(135deg, #fc4c02, #e8350a);
-    display: flex; align-items: center; justify-content: center; font-size: 18px;
-  }
-  .logo h1 { font-size: 16px; font-weight: 600; }
-  .logo p { font-size: 11px; color: var(--orange); }
-  .header-right { display: flex; align-items: center; gap: 8px; }
-  .btn-head {
-    background: var(--surface2); border: 0.5px solid var(--border);
-    border-radius: 8px; padding: 6px 12px; color: var(--muted);
-    font-family: 'Outfit', sans-serif; font-size: 12px; cursor: pointer;
-    transition: color 0.2s; text-decoration: none; display: inline-block;
-  }
-  .btn-head:hover { color: var(--text); }
-
-  .main { max-width: 960px; margin: 0 auto; padding: 24px; }
-
-  .week-nav {
-    display: flex; align-items: center; justify-content: space-between;
-    background: var(--surface); border: 0.5px solid var(--border);
-    border-radius: 14px; padding: 16px 20px; margin-bottom: 16px;
-  }
-  .nav-btn {
-    background: var(--surface2); border: 0.5px solid var(--border);
-    border-radius: 8px; padding: 7px 14px; color: var(--text);
-    font-family: 'Outfit', sans-serif; font-size: 13px; cursor: pointer;
-    transition: border-color 0.2s;
-  }
-  .nav-btn:hover { border-color: var(--accent); }
-  .week-info { text-align: center; }
-  .week-info h2 { font-size: 16px; font-weight: 600; }
-  .week-info p { font-size: 12px; color: var(--muted); margin-top: 2px; }
-
-  .status-bar {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 16px; flex-wrap: wrap; gap: 10px;
-  }
-  .status-badge { font-size: 12px; padding: 4px 12px; border-radius: 20px; font-weight: 500; }
-  .status-published { background: rgba(34,197,94,0.15); color: var(--green); }
-  .status-draft     { background: rgba(245,158,11,0.15); color: #f59e0b; }
-  .status-empty     { background: rgba(122,128,153,0.15); color: var(--muted); }
-
-  .days-list { display: flex; flex-direction: column; gap: 10px; }
-
-  .day-row {
-    background: var(--surface); border: 0.5px solid var(--border);
-    border-radius: 12px; padding: 14px 16px;
-    display: grid; grid-template-columns: 90px 1fr; gap: 12px; align-items: start;
-  }
-  .day-row.today-row { border-color: rgba(79,142,247,0.3); }
-  .day-label .dname { font-size: 13px; font-weight: 600; }
-  .day-label .ddate { font-size: 11px; color: var(--muted); margin-top: 2px; }
-
-  /* Plans container */
-  .plans-container { display: flex; flex-direction: column; gap: 10px; }
-  .plan-block {
-    background: var(--surface2); border: 0.5px solid var(--border);
-    border-radius: 10px; padding: 12px;
-    display: flex; flex-direction: column; gap: 8px;
-    position: relative;
-  }
-  .plan-block-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-
-  select, input[type="text"] {
-    background: var(--bg); border: 0.5px solid var(--border);
-    border-radius: 7px; padding: 6px 10px; color: var(--text);
-    font-family: 'Outfit', sans-serif; font-size: 12px; outline: none; cursor: pointer;
-  }
-  select:focus, input[type="text"]:focus { border-color: var(--accent); }
-  .select-type { width: 180px; }
-  .input-location { width: 160px; }
-  input[type="text"]::placeholder { color: var(--muted); }
-
-  textarea {
-    width: 100%; background: var(--bg); border: 0.5px solid var(--border);
-    border-radius: 7px; padding: 10px 12px; color: var(--text);
-    font-family: 'Outfit', sans-serif; font-size: 13px; outline: none;
-    resize: vertical; min-height: 75px; line-height: 1.5; transition: border-color 0.2s;
-  }
-  textarea:focus { border-color: var(--accent); }
-  textarea::placeholder { color: var(--muted); }
-
-  .shortcuts { display: flex; flex-wrap: wrap; gap: 4px; }
-  .shortcut {
-    background: rgba(79,142,247,0.08); border: 0.5px solid rgba(79,142,247,0.2);
-    border-radius: 5px; padding: 2px 7px; font-size: 10px; color: var(--muted);
-    cursor: pointer; transition: color 0.15s, border-color 0.15s; user-select: none;
-  }
-  .shortcut:hover { color: var(--accent); border-color: var(--accent); }
-
-  .btn-add-plan {
-    background: transparent; border: 0.5px dashed var(--border);
-    border-radius: 8px; padding: 8px; color: var(--muted);
-    font-family: 'Outfit', sans-serif; font-size: 12px; cursor: pointer;
-    transition: border-color 0.2s, color 0.2s; width: 100%; text-align: center;
-  }
-  .btn-add-plan:hover { border-color: var(--accent); color: var(--accent); }
-
-  .btn-remove-plan {
-    position: absolute; top: 8px; right: 8px;
-    background: rgba(224,0,32,0.1); border: none; border-radius: 5px;
-    padding: 3px 8px; color: #ff6b6b; font-size: 11px; cursor: pointer;
-    transition: background 0.2s;
-  }
-  .btn-remove-plan:hover { background: rgba(224,0,32,0.2); }
-
-  .actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
-  .btn-save {
-    flex: 1; padding: 12px; border-radius: 10px;
-    background: var(--surface); border: 0.5px solid var(--border);
-    color: var(--muted); font-family: 'Outfit', sans-serif; font-size: 14px;
-    cursor: pointer; transition: border-color 0.2s, color 0.2s;
-  }
-  .btn-save:hover { border-color: var(--accent); color: var(--text); }
-  .btn-publish {
-    flex: 2; padding: 12px; border-radius: 10px; border: none;
-    background: var(--orange); color: #fff;
-    font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600;
-    cursor: pointer; transition: opacity 0.2s, transform 0.1s;
-  }
-  .btn-publish:hover { opacity: 0.9; }
-  .btn-publish:active { transform: scale(0.98); }
-  .btn-publish:disabled { opacity: 0.5; cursor: not-allowed; }
-  .btn-unpublish {
-    flex: 1; padding: 12px; border-radius: 10px;
-    background: transparent; border: 0.5px solid rgba(224,0,32,0.3);
-    color: #ff6b6b; font-family: 'Outfit', sans-serif; font-size: 13px;
-    cursor: pointer; transition: background 0.2s;
-  }
-  .btn-unpublish:hover { background: rgba(224,0,32,0.1); }
-
-  .msg-field {
-    width: 100%; background: var(--surface2); border: 0.5px solid rgba(79,142,247,0.2);
-    border-radius: 10px; padding: 12px 14px; color: var(--text);
-    font-family: 'Outfit', sans-serif; font-size: 13px; outline: none;
-    resize: vertical; min-height: 60px; line-height: 1.6;
-    transition: border-color 0.2s; margin-top: 8px;
-  }
-  .msg-field:focus { border-color: var(--accent); }
-  .msg-field::placeholder { color: var(--muted); }
-  .msg-card {
-    background: rgba(79,142,247,0.05); border: 0.5px solid rgba(79,142,247,0.2);
-    border-radius: 12px; padding: 14px 16px; margin-bottom: 16px;
-  }
-  .msg-card-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 2px; }
-  .msg-card-hint { font-size: 11px; color: var(--muted); }
-
-  .toast {
-    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
-    background: var(--surface2); border: 0.5px solid rgba(34,197,94,0.4);
-    border-radius: 10px; padding: 12px 20px; font-size: 13px; color: var(--green);
-    transition: transform 0.3s ease; z-index: 100; white-space: nowrap;
-  }
-  .toast.show { transform: translateX(-50%) translateY(0); }
-  .toast.error { border-color: rgba(224,0,32,0.4); color: #ff6b6b; }
-
-  .draft-notice {
-    background: rgba(245,158,11,0.1); border: 0.5px solid rgba(245,158,11,0.3);
-    border-radius: 10px; padding: 10px 16px; font-size: 13px; color: #f59e0b;
-    margin-bottom: 16px; display: none;
-  }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0d0f14;--surf:#161a23;--surf2:#1e2330;--brd:rgba(255,255,255,.08);--txt:#e8eaf0;--mut:#7a8099;--acc:#4f8ef7;--ora:#fc4c02;--grn:#22c55e;--amb:#f59e0b;--red:#ef4444}
+html,body{min-height:100%}
+body{background:var(--bg);font-family:'Outfit',sans-serif;color:var(--txt);background-image:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(252,76,2,.05),transparent 60%)}
+header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:.5px solid var(--brd);background:rgba(22,26,35,.9);backdrop-filter:blur(10px);position:sticky;top:0;z-index:20;flex-wrap:wrap;gap:8px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo img{width:36px;height:36px;border-radius:9px;object-fit:contain}
+.logo h1{font-size:16px;font-weight:600}
+.logo p{font-size:11px;color:var(--ora)}
+.btn-h{background:var(--surf2);border:.5px solid var(--brd);border-radius:8px;padding:6px 12px;color:var(--mut);font-family:'Outfit',sans-serif;font-size:12px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:all .2s}
+.btn-h:hover{color:var(--txt);border-color:var(--acc)}
+.main{max-width:960px;margin:0 auto;padding:24px}
+.main-tabs{display:flex;gap:0;margin-bottom:20px;border-bottom:.5px solid var(--brd);flex-wrap:wrap}
+.main-tab{padding:10px 16px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;background:none;border:none;color:var(--mut);border-bottom:2px solid transparent;transition:all .2s;margin-bottom:-1px;white-space:nowrap}
+.main-tab.on{color:var(--acc);border-bottom-color:var(--acc)}
+.tab-section{display:none}
+.tab-section.on{display:block}
+.week-nav{display:flex;align-items:center;justify-content:space-between;background:var(--surf);border:.5px solid var(--brd);border-radius:14px;padding:16px 20px;margin-bottom:16px}
+.nav-btn{background:var(--surf2);border:.5px solid var(--brd);border-radius:8px;padding:7px 14px;color:var(--txt);font-family:'Outfit',sans-serif;font-size:13px;cursor:pointer;transition:border-color .2s}
+.nav-btn:hover{border-color:var(--acc)}
+.nav-btn:disabled{opacity:.3;cursor:not-allowed}
+.week-info{text-align:center}
+.week-info h2{font-size:16px;font-weight:600}
+.week-info p{font-size:12px;color:var(--mut);margin-top:2px}
+.status-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.status-badge{font-size:12px;padding:4px 12px;border-radius:20px;font-weight:500}
+.status-published{background:rgba(34,197,94,.15);color:var(--grn)}
+.status-draft{background:rgba(245,158,11,.15);color:var(--amb)}
+.status-empty{background:rgba(122,128,153,.15);color:var(--mut)}
+.draft-notice{background:rgba(245,158,11,.1);border:.5px solid rgba(245,158,11,.3);border-radius:10px;padding:10px 16px;font-size:13px;color:var(--amb);margin-bottom:16px;display:none}
+.msg-card{background:rgba(79,142,247,.05);border:.5px solid rgba(79,142,247,.2);border-radius:12px;padding:14px 16px;margin-bottom:16px}
+.msg-card-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--acc);margin-bottom:2px}
+.msg-card-hint{font-size:11px;color:var(--mut)}
+.msg-field{width:100%;background:var(--surf2);border:.5px solid rgba(79,142,247,.2);border-radius:10px;padding:12px 14px;color:var(--txt);font-family:'Outfit',sans-serif;font-size:13px;outline:none;resize:vertical;min-height:60px;line-height:1.6;transition:border-color .2s;margin-top:8px}
+.msg-field:focus{border-color:var(--acc)}
+.msg-field::placeholder{color:var(--mut)}
+.days-list{display:flex;flex-direction:column;gap:10px}
+.day-row{background:var(--surf);border:.5px solid var(--brd);border-radius:12px;padding:14px 16px;display:grid;grid-template-columns:90px 1fr;gap:12px;align-items:start}
+.day-row.today-row{border-color:rgba(79,142,247,.3)}
+.day-label .dname{font-size:13px;font-weight:600}
+.day-label .ddate{font-size:11px;color:var(--mut);margin-top:2px}
+.plans-container{display:flex;flex-direction:column;gap:10px}
+.plan-block{border:.5px solid var(--brd);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px;position:relative}
+.plan-block-header{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+select{background:var(--bg);border:.5px solid var(--brd);border-radius:7px;padding:6px 10px;color:var(--txt);font-family:'Outfit',sans-serif;font-size:12px;outline:none;cursor:pointer}
+select:focus{border-color:var(--acc)}
+input[type="text"]{background:var(--bg);border:.5px solid var(--brd);border-radius:7px;padding:6px 10px;color:var(--txt);font-family:'Outfit',sans-serif;font-size:12px;outline:none}
+input[type="text"]:focus{border-color:var(--acc)}
+input[type="text"]::placeholder{color:var(--mut)}
+.select-type{width:180px}
+.input-location{width:160px}
+textarea{width:100%;background:var(--bg);border:.5px solid var(--brd);border-radius:7px;padding:10px 12px;color:var(--txt);font-family:'Outfit',sans-serif;font-size:13px;outline:none;resize:vertical;min-height:75px;line-height:1.5;transition:border-color .2s}
+textarea:focus{border-color:var(--acc)}
+textarea::placeholder{color:var(--mut)}
+.shortcuts{display:flex;flex-wrap:wrap;gap:4px}
+.shortcut{background:rgba(79,142,247,.08);border:.5px solid rgba(79,142,247,.2);border-radius:5px;padding:2px 7px;font-size:10px;color:var(--mut);cursor:pointer;transition:color .15s,border-color .15s;user-select:none}
+.shortcut:hover{color:var(--acc);border-color:var(--acc)}
+.btn-add-plan{background:transparent;border:.5px dashed var(--brd);border-radius:8px;padding:8px;color:var(--mut);font-family:'Outfit',sans-serif;font-size:12px;cursor:pointer;transition:border-color .2s,color .2s;width:100%;text-align:center}
+.btn-add-plan:hover{border-color:var(--acc);color:var(--acc)}
+.btn-remove-plan{position:absolute;top:8px;right:8px;background:rgba(224,0,32,.1);border:none;border-radius:5px;padding:3px 8px;color:#ff6b6b;font-size:11px;cursor:pointer}
+.btn-remove-plan:hover{background:rgba(224,0,32,.2)}
+.actions{display:flex;gap:12px;margin-top:24px;flex-wrap:wrap}
+.btn-save{flex:1;padding:12px;border-radius:10px;background:var(--surf);border:.5px solid var(--brd);color:var(--mut);font-family:'Outfit',sans-serif;font-size:14px;cursor:pointer;transition:border-color .2s,color .2s}
+.btn-save:hover{border-color:var(--acc);color:var(--txt)}
+.btn-publish{flex:2;padding:12px;border-radius:10px;border:none;background:var(--ora);color:#fff;font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .2s}
+.btn-publish:hover{opacity:.9}
+.btn-publish:disabled{opacity:.5;cursor:not-allowed}
+.btn-unpublish{flex:1;padding:12px;border-radius:10px;background:transparent;border:.5px solid rgba(224,0,32,.3);color:#ff6b6b;font-family:'Outfit',sans-serif;font-size:13px;cursor:pointer}
+.btn-unpublish:hover{background:rgba(224,0,32,.1)}
+.comp-item{background:var(--surf);border:.5px solid var(--brd);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px}
+.comp-item-info{flex:1;min-width:200px}
+.comp-item-name{font-size:14px;font-weight:600}
+.comp-item-meta{font-size:12px;color:var(--mut);margin-top:3px}
+.comp-item-actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn-success{background:var(--grn);border:none;border-radius:8px;padding:7px 16px;color:#fff;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer}
+.btn-warn{background:var(--amb);border:none;border-radius:8px;padding:7px 16px;color:#000;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer}
+.btn-danger{background:var(--red);border:none;border-radius:8px;padding:7px 16px;color:#fff;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer}
+.upload-zone{border:2px dashed var(--brd);border-radius:14px;padding:40px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:16px}
+.upload-zone:hover{border-color:var(--acc);background:rgba(79,142,247,.04)}
+.upload-zone.dragover{border-color:var(--acc);background:rgba(79,142,247,.08)}
+.upload-icon{font-size:40px;margin-bottom:12px}
+.upload-title{font-size:15px;font-weight:600;margin-bottom:6px}
+.upload-hint{font-size:12px;color:var(--mut)}
+.preview-card{background:var(--surf);border:.5px solid rgba(34,197,94,.3);border-radius:14px;padding:20px;margin-bottom:20px}
+.preview-title{font-size:14px;font-weight:600;color:var(--grn);margin-bottom:14px}
+.preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:14px}
+.preview-item{background:var(--surf2);border-radius:8px;padding:10px}
+.preview-item label{display:block;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin-bottom:4px}
+.preview-item span{font-size:13px;color:var(--txt)}
+.preview-dists{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.dist-pill{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;border:.5px solid var(--brd)}
+.rules-box{background:var(--surf);border:.5px solid var(--brd);border-radius:12px;padding:16px;margin-bottom:20px;font-size:12px;line-height:1.8}
+.rules-box-title{font-weight:700;color:var(--acc);margin-bottom:10px;font-size:13px}
+.rules-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:var(--surf);border:.5px solid var(--brd);border-radius:16px;padding:28px;max-width:420px;width:90%}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:10px}
+.modal-body{font-size:13px;color:var(--mut);margin-bottom:20px;line-height:1.6}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surf2);border:.5px solid rgba(34,197,94,.4);border-radius:10px;padding:12px 20px;font-size:13px;color:var(--grn);transition:transform .3s;z-index:300;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.error{border-color:rgba(224,0,32,.4);color:#ff6b6b}
+.toast.warn{border-color:rgba(245,158,11,.4);color:var(--amb)}
+.loading{display:flex;align-items:center;justify-content:center;min-height:120px;color:var(--mut);font-size:14px;gap:10px}
+.spin{width:18px;height:18px;border:2px solid var(--brd);border-top-color:var(--acc);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
-
 <header>
   <div class="logo">
-    <div class="logo-icon" style="background:none;padding:0;overflow:hidden;"><img src="data:image/png;base64,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" style="width:36px;height:36px;object-fit:contain;border-radius:9px;"></div>
-    <div>
-      <h1>GGT Admin</h1>
-      <p>CoachDav</p>
-    </div>
+    <img src="logo-ggt.png" alt="GGT">
+    <div><h1>GGT Admin</h1><p>CoachDav</p></div>
   </div>
-  <div class="header-right">
-    <a href="planning.html" class="btn-head">👁 Voir comme adhérent</a>
-    <button class="btn-head" onclick="logout()">Déconnexion</button>
+  <div style="display:flex;gap:8px;align-items:center">
+    <span id="user-name" style="font-size:13px;color:var(--mut)"></span>
+    <a href="planning.html" class="btn-h">👁 Voir comme adhérent</a>
+    <button class="btn-h" onclick="logout()">Déconnexion</button>
   </div>
 </header>
 
 <div class="main">
+  <div class="main-tabs">
+    <button class="main-tab on" id="tab-planning-btn" onclick="switchMain('planning')">📅 Planning hebdo</button>
+    <button class="main-tab" id="tab-comp-btn" onclick="switchMain('comp')">🏅 Plans de compétition</button>
+    <button class="main-tab" id="tab-export-btn" onclick="switchMain('export')">📥 Export Excel</button>
+    <button class="main-tab" id="tab-lexique-btn" onclick="switchMain('lexique')">📖 Lexique du site</button>
+  </div>
 
-  <div class="week-nav">
-    <button class="nav-btn" onclick="changeWeek(-1)">← Précédente</button>
-    <div class="week-info">
-      <h2 id="week-label">Chargement...</h2>
-      <p id="week-dates"></p>
+  <!-- PLANNING HEBDO -->
+  <div class="tab-section on" id="tab-planning">
+    <div class="week-nav">
+      <button class="nav-btn" id="btn-prev" onclick="changeWeek(-1)">&#8592; Précédente</button>
+      <div class="week-info"><h2 id="week-label">Chargement...</h2><p id="week-dates"></p></div>
+      <button class="nav-btn" id="btn-next" onclick="changeWeek(1)">Suivante &#8594;</button>
     </div>
-    <button class="nav-btn" onclick="changeWeek(1)">Suivante →</button>
+    <div class="status-bar">
+      <span class="status-badge status-empty" id="status-badge">● Vide</span>
+      <span style="font-size:12px;color:var(--mut)" id="last-update"></span>
+    </div>
+    <div class="draft-notice" id="draft-notice">⚠️ Ce planning est en brouillon — les adhérents ne le voient pas encore.</div>
+    <div class="msg-card">
+      <div class="msg-card-label">💬 Message de la semaine</div>
+      <div class="msg-card-hint">Visible par tous · Laisse vide si rien à signaler</div>
+      <textarea class="msg-field" id="message-semaine" placeholder="Ex: Cette semaine on adapte le jeudi seuil..."></textarea>
+    </div>
+    <div class="days-list" id="days-list"><div class="loading"><div class="spin"></div> Chargement...</div></div>
+    <div class="actions">
+      <button class="btn-save" onclick="saveDraft()">💾 Brouillon</button>
+      <button class="btn-publish" id="btn-pub" onclick="publish()">📤 Publier la semaine</button>
+      <button class="btn-unpublish" id="btn-unpub" onclick="unpublish()" style="display:none">🔒 Dépublier</button>
+    </div>
   </div>
 
-  <div class="status-bar">
-    <span class="status-badge status-empty" id="status-badge">● Vide</span>
-    <span style="font-size:12px;color:var(--muted)" id="last-update"></span>
+  <!-- COMPETITIONS -->
+  <div class="tab-section" id="tab-comp">
+    <div style="display:flex;border-bottom:.5px solid var(--brd);margin-bottom:16px">
+      <button class="main-tab on" id="subt-list-btn" onclick="switchSub('list')">📋 Gérer les plans</button>
+      <button class="main-tab" id="subt-new-btn" onclick="switchSub('new')">➕ Nouveau plan</button>
+    </div>
+    <div class="tab-section on" id="subt-list">
+      <div id="comp-list-container"><div class="loading"><div class="spin"></div> Chargement...</div></div>
+    </div>
+    <div class="tab-section" id="subt-new">
+      <div class="rules-box">
+        <div class="rules-box-title">📋 Règles importantes</div>
+        <div class="rules-grid">
+          <div><strong style="color:var(--grn)">✅ Mettre à jour</strong><br><span style="color:var(--mut)">Même nom → "Mettre à jour" → suivis conservés</span></div>
+          <div><strong style="color:var(--amb)">⚠ Distances</strong><br><span style="color:var(--mut)">Ne jamais modifier les distances sur un plan existant</span></div>
+          <div><strong style="color:var(--acc)">🆕 Nouveau</strong><br><span style="color:var(--mut)">Nom différent = nouveau plan indépendant</span></div>
+          <div><strong style="color:var(--red)">🗑 Suppression</strong><br><span style="color:var(--mut)">Supprime le plan ET tous les suivis. Préfère dépublier</span></div>
+        </div>
+      </div>
+      <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()"
+           ondragover="event.preventDefault();this.classList.add('dragover')"
+           ondragleave="this.classList.remove('dragover')"
+           ondrop="handleDrop(event)">
+        <input type="file" id="file-input" accept=".xlsx" style="display:none" onchange="handleFile(event)">
+        <div class="upload-icon">📂</div>
+        <div class="upload-title">Glisse ton fichier Excel ici</div>
+        <div class="upload-hint">ou clique pour sélectionner · Format GGT_Template_Plan_Course.xlsx</div>
+      </div>
+      <div id="preview-area" style="display:none"></div>
+    </div>
   </div>
 
-  <div class="draft-notice" id="draft-notice">
-    ⚠️ Ce planning est en brouillon — les adhérents ne le voient pas encore. Clique sur "Publier" pour le rendre visible.
+  <!-- EXPORT EXCEL -->
+  <div class="tab-section" id="tab-export">
+    <div style="background:var(--surf);border:.5px solid var(--brd);border-radius:14px;padding:20px 24px;margin-bottom:20px">
+      <div style="font-size:14px;font-weight:600;margin-bottom:6px">📥 Exporter le planning en Excel</div>
+      <div style="font-size:12px;color:var(--mut);margin-bottom:20px">Choisis une plage de semaines à exporter pour créer une sauvegarde locale sur ton disque dur.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;max-width:500px">
+        <div>
+          <label style="display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin-bottom:6px">Semaine de début</label>
+          <input type="date" id="export-date-start" style="width:100%;background:var(--surf2);border:.5px solid var(--brd);border-radius:8px;padding:9px 12px;color:var(--txt);font-family:'Outfit',sans-serif;font-size:13px;outline:none">
+        </div>
+        <div>
+          <label style="display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin-bottom:6px">Semaine de fin</label>
+          <input type="date" id="export-date-end" style="width:100%;background:var(--surf2);border:.5px solid var(--brd);border-radius:8px;padding:9px 12px;color:var(--txt);font-family:'Outfit',sans-serif;font-size:13px;outline:none">
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button class="btn-publish" style="flex:unset;padding:10px 24px;font-size:13px" onclick="exportPlanning()">📥 Télécharger Excel</button>
+        <span id="export-status" style="font-size:12px;color:var(--mut)"></span>
+      </div>
+    </div>
+    <div style="background:rgba(79,142,247,.05);border:.5px solid rgba(79,142,247,.2);border-radius:12px;padding:14px 16px;font-size:12px;color:var(--mut);line-height:1.8">
+      💡 <strong style="color:var(--acc)">Note :</strong> Ce fichier est une sauvegarde en lecture. Tu peux l'archiver ou l'imprimer en PDF depuis Excel via Fichier → Imprimer → Enregistrer en PDF.
+    </div>
   </div>
 
-  <div class="msg-card">
-    <div class="msg-card-label">💬 Message de la semaine</div>
-    <div class="msg-card-hint">Visible par tous les adhérents en haut du planning · Laisse vide si rien à signaler</div>
-    <textarea class="msg-field" id="message-semaine" placeholder="Ex: Cette semaine on adapte le jeudi seuil en raison du froid — rendez-vous 18h30 au parking habituel..."></textarea>
+  <!-- LEXIQUE -->
+  <div class="tab-section" id="tab-lexique">
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="background:var(--surf);border:.5px solid var(--brd);border-radius:14px;padding:20px 24px">
+        <div style="font-size:14px;font-weight:600;margin-bottom:14px;color:var(--acc)">🎨 Couleurs des types de séance</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:rgba(156,163,175,0.13)"><span style="font-size:16px">😴</span><div><div style="font-size:12px;font-weight:600">Repos</div><div style="font-size:10px;color:var(--mut)">#D9D9D9 · rgba(156,163,175,0.13)</div></div></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:rgba(255,192,0,0.26)"><span style="font-size:16px">🏔️</span><div><div style="font-size:12px;font-weight:600;color:#FFC000">Côtes</div><div style="font-size:10px;color:var(--mut)">#FFC000 · rgba(255,192,0,0.26)</div></div></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:rgba(119,181,254,0.26)"><span style="font-size:16px">⚡</span><div><div style="font-size:12px;font-weight:600;color:#77B5FE">Seuil</div><div style="font-size:10px;color:var(--mut)">#77B5FE · rgba(119,181,254,0.26)</div></div></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:rgba(120,170,60,0.26)"><span style="font-size:16px">🌲</span><div><div style="font-size:12px;font-weight:600;color:#8fba3a">Sortie</div><div style="font-size:10px;color:var(--mut)">#8FBA3A · rgba(120,170,60,0.26)</div></div></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:rgba(143,168,191,0.26)"><span style="font-size:16px">🏃</span><div><div style="font-size:12px;font-weight:600;color:#8FA8BF">Footing</div><div style="font-size:10px;color:var(--mut)">#8FA8BF · rgba(143,168,191,0.26)</div></div></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:rgba(245,158,11,0.26)"><span style="font-size:16px">🏅</span><div><div style="font-size:12px;font-weight:600;color:#f59e0b">Course</div><div style="font-size:10px;color:var(--mut)">#F59E0B · rgba(245,158,11,0.26)</div></div></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:rgba(168,116,255,0.26)"><span style="font-size:16px">💪</span><div><div style="font-size:12px;font-weight:600;color:#b08fff">Renforcement</div><div style="font-size:10px;color:var(--mut)">#B08FFF · rgba(168,116,255,0.26)</div></div></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:rgba(200,185,130,0.22)"><span style="font-size:16px">📋</span><div><div style="font-size:12px;font-weight:600;color:#c8b870">Autre</div><div style="font-size:10px;color:var(--mut)">#C8B870 · rgba(200,185,130,0.22)</div></div></div>
+        </div>
+      </div>
+      <div style="background:var(--surf);border:.5px solid var(--brd);border-radius:14px;padding:20px 24px">
+        <div style="font-size:14px;font-weight:600;margin-bottom:14px;color:var(--acc)">🏃 Activités suivi</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:16px">
+          <div style="padding:8px 12px;border-radius:8px;background:rgba(34,197,94,0.20)"><span>🏃</span> <strong>Course / Trail</strong><div style="font-size:10px;color:var(--mut)">Cumul km + D+</div></div>
+          <div style="padding:8px 12px;border-radius:8px;background:rgba(255,192,0,0.20)"><span>🚴</span> <strong>Vélo</strong><div style="font-size:10px;color:var(--mut)">km + D+ affichés</div></div>
+          <div style="padding:8px 12px;border-radius:8px;background:rgba(180,140,80,0.20)"><span>🚶</span> <strong>Marche</strong><div style="font-size:10px;color:var(--mut)">Cumul km + D+</div></div>
+          <div style="padding:8px 12px;border-radius:8px;background:rgba(79,142,247,0.20)"><span>🏊</span> <strong>Natation</strong><div style="font-size:10px;color:var(--mut)">km affiché</div></div>
+          <div style="padding:8px 12px;border-radius:8px;background:rgba(168,116,255,0.20)"><span>🏋️</span> <strong>Renforcement</strong><div style="font-size:10px;color:var(--mut)">Sans mesure</div></div>
+        </div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px">Sensations :</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div style="padding:6px 14px;border-radius:20px;background:rgba(34,197,94,0.22);font-size:13px">😊 Très facile</div>
+          <div style="padding:6px 14px;border-radius:20px;background:rgba(134,239,172,0.22);font-size:13px">🙂 Facile</div>
+          <div style="padding:6px 14px;border-radius:20px;background:rgba(251,191,36,0.22);font-size:13px">😐 Normal</div>
+          <div style="padding:6px 14px;border-radius:20px;background:rgba(252,165,165,0.22);font-size:13px">😓 Difficile</div>
+          <div style="padding:6px 14px;border-radius:20px;background:rgba(239,68,68,0.22);font-size:13px">😰 Très difficile</div>
+        </div>
+      </div>
+      <div style="background:var(--surf);border:.5px solid var(--brd);border-radius:14px;padding:20px 24px">
+        <div style="font-size:14px;font-weight:600;margin-bottom:14px;color:var(--acc)">🔐 Règles Firestore</div>
+        <div style="font-size:11px;color:var(--mut);margin-bottom:10px">À copier-coller dans Firebase → Firestore → Règles</div>
+        <pre style="background:var(--bg);border:.5px solid var(--brd);border-radius:8px;padding:14px;font-size:11px;color:#a8b0c8;overflow-x:auto;line-height:1.7">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /plannings/{weekId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null &amp;&amp;
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null &amp;&amp;
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    match /vma_data/{userId} {
+      allow read, write: if request.auth != null &amp;&amp; request.auth.uid == userId;
+    }
+    match /race_plans/{planId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null &amp;&amp;
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    match /race_suivi/{docId} {
+      allow read, write: if request.auth != null &amp;&amp;
+        docId.matches(request.auth.uid + '_.*');
+      allow read: if request.auth != null;
+    }
+  }
+}</pre>
+      </div>
+      <div style="background:var(--surf);border:.5px solid var(--brd);border-radius:14px;padding:20px 24px">
+        <div style="font-size:14px;font-weight:600;margin-bottom:14px;color:var(--acc)">📅 Navigation semaines</div>
+        <div style="font-size:12px;color:var(--mut);line-height:1.8;margin-bottom:12px">Configurée sur <strong style="color:var(--txt)">±3120 semaines (60 ans)</strong>. Pour modifier, chercher dans planning.html et admin.html :</div>
+        <pre style="background:var(--bg);border:.5px solid var(--brd);border-radius:8px;padding:12px;font-size:11px;color:#a8b0c8;overflow-x:auto">currentWeekOffset &lt;= -3120  // changer pour ±5200 = 100 ans</pre>
+      </div>
+      <div style="background:var(--surf);border:.5px solid var(--brd);border-radius:14px;padding:20px 24px">
+        <div style="font-size:14px;font-weight:600;margin-bottom:14px;color:var(--acc)">🔗 URLs et références</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;font-size:12px">
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Site GGT</div><a href="https://genepigroupetrail.github.io/ggt-plan-entrainement/" target="_blank" style="color:var(--acc)">genepigroupetrail.github.io/ggt-plan-entrainement/</a></div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Firebase</div><a href="https://console.firebase.google.com/project/ggt-plan-entrainement" target="_blank" style="color:var(--acc)">console.firebase.google.com</a></div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">GitHub</div><a href="https://github.com/genepigroupetrail/ggt-plan-entrainement" target="_blank" style="color:var(--acc)">github.com/genepigroupetrail/ggt-plan-entrainement</a></div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Firebase Project ID</div><code style="color:var(--txt)">ggt-plan-entrainement</code></div>
+        </div>
+      </div>
+      <div style="background:var(--surf);border:.5px solid var(--brd);border-radius:14px;padding:20px 24px">
+        <div style="font-size:14px;font-weight:600;margin-bottom:10px;color:var(--acc)">📂 Template Excel</div>
+        <div style="font-size:12px;color:var(--mut);margin-bottom:14px">Fichier template pour créer un plan de compétition.</div>
+        <a href="GGT_Template_Plan_Course.xlsx" download class="btn-publish" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;flex:unset;padding:10px 20px;font-size:13px;border-radius:10px">📥 Télécharger le template Excel</a>
+      </div>
+    </div>
   </div>
-
-  <div class="days-list" id="days-list">
-    <div style="text-align:center;padding:40px;color:var(--muted)">Chargement...</div>
-  </div>
-
-  <div class="actions">
-    <button class="btn-save" onclick="saveDraft()">💾 Brouillon</button>
-    <button class="btn-publish" id="btn-pub" onclick="publish()">📤 Publier la semaine</button>
-    <button class="btn-unpublish" id="btn-unpub" onclick="unpublish()" style="display:none">🔒 Dépublier</button>
-  </div>
-
 </div>
 
+<!-- Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Confirmer</div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-actions">
+      <button class="btn-h" onclick="closeModal()">Annuler</button>
+      <button class="btn-danger" id="modal-confirm">Confirmer</button>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
+
+<script>
+function switchMain(name) {
+  ['planning','comp','export','lexique'].forEach(function(n) {
+    document.getElementById('tab-'+n).className = 'tab-section' + (n===name ? ' on' : '');
+    document.getElementById('tab-'+n+'-btn').className = 'main-tab' + (n===name ? ' on' : '');
+  });
+  if (name === 'comp') window.loadCompList && window.loadCompList();
+}
+function switchSub(name) {
+  ['list','new'].forEach(function(n) {
+    document.getElementById('subt-'+n).className = 'tab-section' + (n===name ? ' on' : '');
+    document.getElementById('subt-'+n+'-btn').className = 'main-tab' + (n===name ? ' on' : '');
+  });
+}
+function closeModal() { document.getElementById('modal').classList.remove('show'); }
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type==='err' ? ' error' : type==='warn' ? ' warn' : '');
+  setTimeout(function() { t.className = 'toast' + (type==='err' ? ' error' : type==='warn' ? ' warn' : ''); }, 3000);
+}
+</script>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyC7a3obsTgqf5An8v1t8fpQWCln-ZbZWpk",
-  authDomain: "ggt-planning-30503.firebaseapp.com",
-  projectId: "ggt-planning-30503",
-  storageBucket: "ggt-planning-30503.firebasestorage.app",
-  messagingSenderId: "172309807991",
-  appId: "1:172309807991:web:6a66ce809970c10c375772"
-};
+  var firebaseConfig = {
+    apiKey: "AIzaSyBfyEpytc8VEJ1sdJeCY2Imx5WAu-YazYI",
+    authDomain: "ggt-plan-entrainement.firebaseapp.com",
+    projectId: "ggt-plan-entrainement",
+    storageBucket: "ggt-plan-entrainement.firebasestorage.app",
+    messagingSenderId: "663631056543",
+    appId: "1:663631056543:web:d8cb50121fcf8d1c635caa"
+  };
+  var app  = initializeApp(firebaseConfig);
+  var auth = getAuth(app);
+  var db   = getFirestore(app);
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+  var currentWeekOffset = 0;
+  var weekData = {};
+  var parsedPlan = null;
 
-  const JOURS = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
-  const TYPES = [
-    { value: "repos",   label: "😴 Repos" },
-    { value: "cotes",   label: "🏔️ Côtes" },
-    { value: "seuil",   label: "⚡ Seuil / Fractionné" },
-    { value: "sortie",  label: "🌲 Sortie longue" },
-    { value: "footing", label: "🏃 Footing" },
-    { value: "course",  label: "🏅 Course / Compét" },
-    { value: "rm",      label: "💪 Renforcement Musculaire" },
-    { value: "autre",   label: "📋 Autre" },
+  var JOURS   = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+  var TYPES   = [
+    {value:'repos',  label:'😴 Repos'},
+    {value:'cotes',  label:'🏔️ Côtes'},
+    {value:'seuil',  label:'⚡ Seuil / Fractionné'},
+    {value:'sortie', label:'🌲 Sortie longue'},
+    {value:'footing',label:'🏃 Footing'},
+    {value:'course', label:'🏅 Course / Compét'},
+    {value:'rm',     label:'💪 Renforcement Musculaire'},
+    {value:'autre',  label:'📋 Autre'},
   ];
-  const ABBREVS = ["CB","CH","CE","MB","ME","CCE","CCH","CCL","CCR","RAC","EF","TV","TP","VMA","R","S1","S2","D+","x","R30s","R descente"];
+  var ABBREVS = ['CB','CH','CE','MB','ME','CCE','CCH','CCL','CCR','RAC','EF','TV','TP','VMA','R','S1','S2','D+','×','R30s','R descente','Footing','Gammes','Repos','Renforcement Musculaire'];
+  var DIST_COLORS = ['#fc4c02','#4f8ef7','#22c55e','#f59e0b'];
 
-  let currentWeekOffset = 0;
-  let weekData = {};
+  const CELL_COLOR_MAP = {
+    'FFC000': 'rgba(255,192,0,0.26)',
+    '77B5FE': 'rgba(119,181,254,0.26)',
+    '8FBA3A': 'rgba(120,170,60,0.26)',
+    '8FA8BF': 'rgba(143,168,191,0.26)',
+    'F59E0B': 'rgba(245,158,11,0.26)',
+    'B08FFF': 'rgba(168,116,255,0.26)',
+    'C8B870': 'rgba(200,185,130,0.22)',
+  };
+  const CELL_DEFAULT_BG = 'rgba(156,163,175,0.13)';
 
-  function getMondayOfWeek(offset = 0) {
-    const now = new Date();
-    const day = now.getDay() || 7;
-    const monday = new Date(now);
-    monday.setDate(now.getDate() - day + 1 + offset * 7);
+  function normalizeRgb(raw) {
+    // SheetJS peut retourner 6 chars (RRGGBB) ou 8 chars (FFRRGGBB)
+    // On extrait toujours les 6 derniers chars significatifs
+    var s = String(raw || '').toUpperCase().replace(/[^0-9A-F]/g, '');
+    if (s.length === 8) return s.slice(2); // enlever le canal alpha FF
+    if (s.length === 6) return s;
+    return '';
+  }
+  function getCellBg(cell) {
+    if (!cell || !cell.s) return CELL_DEFAULT_BG;
+    var fill = cell.s.fgColor || cell.s.bgColor;
+    if (!fill || fill.theme !== undefined) return CELL_DEFAULT_BG; // ignorer couleurs de thème
+    var rgb = normalizeRgb(fill.rgb);
+    if (!rgb || rgb.length !== 6) return CELL_DEFAULT_BG;
+    if (rgb === '000000' || rgb === 'FFFFFF') return CELL_DEFAULT_BG; // noir/blanc = pas de couleur
+    return CELL_COLOR_MAP[rgb] || CELL_DEFAULT_BG;
+  }
+
+  function cellToHtml(cell) {
+    if (!cell) return 'Repos';
+
+    // Fonction pour convertir le texte brut en HTML (sauts de ligne → <br>)
+    function escTxt(s) {
+      return String(s || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\r\n|\r|\n/g, '<br>');
+    }
+
+    // ── Rich Text via cell.r (XML des runs) ──
+    if (cell.r) {
+      try {
+        var parser = new DOMParser();
+        var safe   = cell.r.replace(/&(?!amp;|lt;|gt;|quot;|apos;)/g, '&amp;');
+        var xmlDoc = parser.parseFromString('<root>' + safe + '</root>', 'text/xml');
+        var runs   = xmlDoc.querySelectorAll('r');
+        if (runs.length > 0) {
+          var html = '';
+          runs.forEach(function(run) {
+            var rPr    = run.querySelector('rPr');
+            var t      = run.querySelector('t');
+            if (!t) return;
+            var runTxt = escTxt(t.textContent || '');
+            if (!runTxt) return;
+            var runStyles = [];
+            if (rPr) {
+              var colorEl = rPr.querySelector('color');
+              if (colorEl && colorEl.getAttribute('rgb')) {
+                var rgb = normalizeRgb(colorEl.getAttribute('rgb'));
+                if (rgb && rgb !== '333333' && rgb !== '000000' && rgb !== 'FFFFFF') {
+                  runStyles.push('color:#' + rgb);
+                }
+              }
+              if (rPr.querySelector('b')) runStyles.push('font-weight:bold');
+              if (rPr.querySelector('i')) runStyles.push('font-style:italic');
+            }
+            html += runStyles.length
+              ? '<span style="' + runStyles.join(';') + '">' + runTxt + '</span>'
+              : runTxt;
+          });
+          if (html.trim()) return html;
+        }
+      } catch(e) {}
+    }
+
+    // ── Cellule simple ──
+    var val = escTxt(cell.v || '');
+    if (!val) return 'Repos';
+
+    var styles = [];
+    if (cell.s && cell.s.font) {
+      var fc = cell.s.font.color;
+      if (fc && fc.rgb) {
+        var frgb = normalizeRgb(fc.rgb);
+        if (frgb && frgb !== '333333' && frgb !== '000000' && frgb !== 'E8EAF0') {
+          styles.push('color:#' + frgb);
+        }
+      }
+      if (cell.s.font.bold)   styles.push('font-weight:bold');
+      if (cell.s.font.italic) styles.push('font-style:italic');
+    }
+    return styles.length
+      ? '<span style="' + styles.join(';') + '">' + val + '</span>'
+      : val;
+  }
+  function getTypeStyle(type) {
+    var map = {
+      repos:'rgba(156,163,175,0.13)', cotes:'rgba(255,192,0,0.26)',
+      seuil:'rgba(119,181,254,0.26)', sortie:'rgba(120,170,60,0.26)',
+      footing:'rgba(143,168,191,0.26)', course:'rgba(245,158,11,0.26)',
+      rm:'rgba(168,116,255,0.26)', autre:'rgba(200,185,130,0.22)',
+    };
+    return map[type] || map['autre'];
+  }
+
+  function getMondayOfWeek(offset) {
+    var now = new Date(), day = now.getDay() || 7;
+    var monday = new Date(now);
+    monday.setDate(now.getDate() - day + 1 + (offset||0) * 7);
     monday.setHours(0,0,0,0);
     return monday;
   }
   function getWeekKey(monday) { return monday.toISOString().split('T')[0]; }
-  function formatDate(d) { return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }); }
-  function showToast(msg, isError = false) {
-    const t = document.getElementById('toast');
-    t.textContent = msg; t.className = 'toast show' + (isError ? ' error' : '');
-    setTimeout(() => t.className = 'toast' + (isError ? ' error' : ''), 3000);
+  function formatDate(d) { return d.toLocaleDateString('fr-FR', {day:'numeric', month:'long'}); }
+  function getWeekNumber(date) {
+    var d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    var dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+    return 'S' + String(Math.ceil((((d - yearStart) / 86400000) + 1)/7)).padStart(2,'0');
   }
 
   function typeOptions(selected) {
-    return TYPES.map(t => `<option value="${t.value}" ${t.value === selected ? 'selected' : ''}>${t.label}</option>`).join('');
+    return TYPES.map(function(t) {
+      return '<option value="' + t.value + '"' + (t.value===selected?' selected':'') + '>' + t.label + '</option>';
+    }).join('');
   }
 
-  function renderPlanBlock(dayIndex, planIndex, plan = {}) {
-    const type = plan.type || 'repos';
-    const contenu = plan.contenu || '';
-    const location = plan.location || '';
-    const shortcuts = ABBREVS.map(a =>
-      `<span class="shortcut" onclick="insertAbbrev(${dayIndex},${planIndex},'${a}')">${a}</span>`
-    ).join('');
-    const removeBtnHtml = planIndex > 0
-      ? `<button class="btn-remove-plan" onclick="removePlan(${dayIndex},${planIndex})">✕ Supprimer</button>`
+  function renderPlanBlock(dayIndex, planIndex, plan) {
+    plan = plan || {};
+    var type     = plan.type || 'repos';
+    var contenu  = plan.contenu || '';
+    var location = plan.location || '';
+    var bg       = getTypeStyle(type);
+    var shortcuts = ABBREVS.map(function(a) {
+      return '<span class="shortcut" onclick="insertAbbrev(' + dayIndex + ',' + planIndex + ',\'' + a + '\')">' + a + '</span>';
+    }).join('');
+    var removeBtn = planIndex > 0
+      ? '<button class="btn-remove-plan" onclick="removePlan(' + dayIndex + ',' + planIndex + ')">&#x2715; Supprimer</button>'
       : '';
-    return `
-      <div class="plan-block" id="plan-${dayIndex}-${planIndex}">
-        ${removeBtnHtml}
-        <div class="plan-block-header">
-          <select class="select-type" onchange="updatePlanField(${dayIndex},${planIndex},'type',this.value)">
-            ${typeOptions(type)}
-          </select>
-          <input type="text" class="input-location" placeholder="📍 Lieu (ex: Élancourt)"
-            value="${location}"
-            oninput="updatePlanField(${dayIndex},${planIndex},'location',this.value)">
-        </div>
-        <textarea id="ta-${dayIndex}-${planIndex}" placeholder="Détail de la séance..."
-          oninput="updatePlanField(${dayIndex},${planIndex},'contenu',this.value)">${contenu}</textarea>
-        <div class="shortcuts">${shortcuts}</div>
-      </div>`;
+    var onchangeType = 'updatePlanField(' + dayIndex + ',' + planIndex + ',\'type\',this.value);document.getElementById(\'plan-' + dayIndex + '-' + planIndex + '\').style.background=getTypeStyle(this.value)';
+    var oninputLoc  = 'updatePlanField(' + dayIndex + ',' + planIndex + ',\'location\',this.value)';
+    var oninputCont = 'updatePlanField(' + dayIndex + ',' + planIndex + ',\'contenu\',this.value)';
+    return '<div class="plan-block" id="plan-' + dayIndex + '-' + planIndex + '" style="background:' + bg + '">'
+      + removeBtn
+      + '<div class="plan-block-header">'
+      + '<select class="select-type" onchange="' + onchangeType + '">' + typeOptions(type) + '</select>'
+      + '<input type="text" class="input-location" placeholder="📍 Lieu" value="' + location + '" oninput="' + oninputLoc + '">'
+      + '</div>'
+      + '<textarea id="ta-' + dayIndex + '-' + planIndex + '" placeholder="Détail de la séance..." oninput="' + oninputCont + '">' + contenu + '</textarea>'
+      + '<div class="shortcuts">' + shortcuts + '</div>'
+      + '</div>';
   }
 
   function renderDay(i, date, plans) {
-    const today = new Date(); today.setHours(0,0,0,0);
-    const isToday = date.getTime() === today.getTime();
-    let plansHtml = plans.map((p, pi) => renderPlanBlock(i, pi, p)).join('');
-    return `
-      <div class="day-row ${isToday ? 'today-row' : ''}" id="day-row-${i}">
-        <div class="day-label">
-          <div class="dname">${JOURS[i]}</div>
-          <div class="ddate">${date.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}</div>
-        </div>
-        <div class="plans-container" id="plans-${i}">
-          ${plansHtml}
-          <button class="btn-add-plan" onclick="addPlan(${i})">+ Ajouter un 2ème plan (ex: autre commune)</button>
-        </div>
-      </div>`;
+    var today = new Date(); today.setHours(0,0,0,0);
+    var isToday = date.getTime() === today.getTime();
+    var plansHtml = plans.map(function(p, pi) { return renderPlanBlock(i, pi, p); }).join('');
+    return '<div class="day-row' + (isToday ? ' today-row' : '') + '" id="day-row-' + i + '">'
+      + '<div class="day-label"><div class="dname">' + JOURS[i] + '</div><div class="ddate">' + date.toLocaleDateString('fr-FR',{day:'numeric',month:'short'}) + '</div></div>'
+      + '<div class="plans-container" id="plans-' + i + '">'
+      + plansHtml
+      + '<button class="btn-add-plan" onclick="addPlan(' + i + ')">+ Ajouter un 2ème plan</button>'
+      + '</div></div>';
   }
 
   async function renderWeek() {
-    const monday = getMondayOfWeek(currentWeekOffset);
-    const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
-    const weekKey = getWeekKey(monday);
-    const today = new Date(); today.setHours(0,0,0,0);
+    var monday  = getMondayOfWeek(currentWeekOffset);
+    var sunday  = new Date(monday); sunday.setDate(monday.getDate()+6);
+    var weekKey = getWeekKey(monday);
+    var weekNum = getWeekNumber(monday);
+    var label   = currentWeekOffset===0 ? 'Cette semaine'
+                : currentWeekOffset===-1 ? 'Semaine dernière'
+                : currentWeekOffset===1  ? 'Semaine prochaine' : 'Semaine';
+    document.getElementById('week-label').textContent = label;
+    document.getElementById('week-dates').textContent = weekNum + ' · ' + formatDate(monday) + ' – ' + formatDate(sunday);
+    document.getElementById('btn-prev').disabled = currentWeekOffset <= -3120;
+    document.getElementById('btn-next').disabled = currentWeekOffset >= 3120;
 
-    document.getElementById('week-label').textContent =
-      currentWeekOffset === 0 ? 'Cette semaine' :
-      currentWeekOffset === -1 ? 'Semaine dernière' :
-      currentWeekOffset === 1 ? 'Semaine prochaine' :
-      `Semaine du ${formatDate(monday)}`;
-    document.getElementById('week-dates').textContent = `${formatDate(monday)} – ${formatDate(sunday)}`;
-
-    const snap = await getDoc(doc(db, "plannings", weekKey));
+    var snap = await getDoc(doc(db, 'plannings', weekKey));
     weekData = snap.exists() ? snap.data() : {};
-    const jours = weekData.jours || Array(7).fill(null).map(() => ({ plans: [{ type: 'repos', contenu: '', location: '' }] }));
-    const published = weekData.published || false;
-    const updatedAt = weekData.updatedAt?.toDate();
+    var jours = weekData.jours || Array(7).fill(null).map(function() {
+      return { plans: [{type:'repos', contenu:'', location:''}] };
+    });
+    var published  = weekData.published || false;
+    var updatedAt  = weekData.updatedAt && weekData.updatedAt.toDate ? weekData.updatedAt.toDate() : null;
 
-    // Normalise les anciens formats
-    const normalizedJours = jours.map(j => {
-      if (!j) return { plans: [{ type: 'repos', contenu: '', location: '' }] };
-      if (!j.plans) return { plans: [{ type: j.type || 'repos', contenu: j.contenu || '', location: '' }] };
+    var normalizedJours = jours.map(function(j) {
+      if (!j) return { plans: [{type:'repos', contenu:'', location:''}] };
+      if (!j.plans) return { plans: [{type: j.type||'repos', contenu: j.contenu||'', location:''}] };
       return j;
     });
     weekData.jours = normalizedJours;
 
-    const badge = document.getElementById('status-badge');
-    const notice = document.getElementById('draft-notice');
-    const btnUnpub = document.getElementById('btn-unpub');
+    var badge    = document.getElementById('status-badge');
+    var notice   = document.getElementById('draft-notice');
+    var btnUnpub = document.getElementById('btn-unpub');
     if (published) {
       badge.className = 'status-badge status-published'; badge.textContent = '● Publié';
       notice.style.display = 'none'; btnUnpub.style.display = 'block';
@@ -382,102 +588,369 @@ const firebaseConfig = {
       badge.className = 'status-badge status-empty'; badge.textContent = '● Vide';
       notice.style.display = 'none'; btnUnpub.style.display = 'none';
     }
-    document.getElementById('last-update').textContent = updatedAt
-      ? `Modifié le ${updatedAt.toLocaleString('fr-FR')}` : '';
-    const msgField = document.getElementById('message-semaine');
+    document.getElementById('last-update').textContent = updatedAt ? 'Modifié le ' + updatedAt.toLocaleString('fr-FR') : '';
+    var msgField = document.getElementById('message-semaine');
     if (msgField) msgField.value = weekData.message || '';
 
-    let html = '';
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(monday); date.setDate(monday.getDate() + i);
+    var html = '';
+    for (var i = 0; i < 7; i++) {
+      var date = new Date(monday); date.setDate(monday.getDate()+i);
       html += renderDay(i, date, normalizedJours[i].plans);
     }
     document.getElementById('days-list').innerHTML = html;
   }
 
-  window.updatePlanField = (dayIndex, planIndex, field, value) => {
-    if (!weekData.jours) return;
-    weekData.jours[dayIndex].plans[planIndex][field] = value;
+  window.updatePlanField = function(di, pi, field, value) {
+    if (weekData.jours) weekData.jours[di].plans[pi][field] = value;
   };
-
-  window.addPlan = (dayIndex) => {
+  window.addPlan = function(di) {
     if (!weekData.jours) return;
-    const plans = weekData.jours[dayIndex].plans;
-    plans.push({ type: 'repos', contenu: '', location: '' });
-    const container = document.getElementById(`plans-${dayIndex}`);
-    const btn = container.querySelector('.btn-add-plan');
-    const newBlock = document.createElement('div');
-    newBlock.innerHTML = renderPlanBlock(dayIndex, plans.length - 1, plans[plans.length - 1]);
-    container.insertBefore(newBlock.firstElementChild, btn);
+    weekData.jours[di].plans.push({type:'repos', contenu:'', location:''});
+    var container = document.getElementById('plans-'+di);
+    var btn = container.querySelector('.btn-add-plan');
+    var d = document.createElement('div');
+    d.innerHTML = renderPlanBlock(di, weekData.jours[di].plans.length-1, weekData.jours[di].plans[weekData.jours[di].plans.length-1]);
+    container.insertBefore(d.firstElementChild, btn);
   };
-
-  window.removePlan = (dayIndex, planIndex) => {
+  window.removePlan = function(di, pi) {
     if (!weekData.jours) return;
-    weekData.jours[dayIndex].plans.splice(planIndex, 1);
-    const monday = getMondayOfWeek(currentWeekOffset);
-    const date = new Date(monday); date.setDate(monday.getDate() + dayIndex);
-    const container = document.getElementById(`plans-${dayIndex}`);
-    const btn = container.querySelector('.btn-add-plan');
-    container.innerHTML = weekData.jours[dayIndex].plans
-      .map((p, pi) => renderPlanBlock(dayIndex, pi, p)).join('');
+    weekData.jours[di].plans.splice(pi, 1);
+    var container = document.getElementById('plans-'+di);
+    var btn = container.querySelector('.btn-add-plan');
+    container.innerHTML = weekData.jours[di].plans.map(function(p,pii) { return renderPlanBlock(di,pii,p); }).join('');
     container.appendChild(btn);
   };
-
-  window.insertAbbrev = (dayIndex, planIndex, abbrev) => {
-    const ta = document.getElementById(`ta-${dayIndex}-${planIndex}`);
+  window.insertAbbrev = function(di, pi, abbrev) {
+    var ta = document.getElementById('ta-'+di+'-'+pi);
     if (!ta) return;
-    const s = ta.selectionStart, e = ta.selectionEnd;
+    var s = ta.selectionStart, e = ta.selectionEnd;
     ta.value = ta.value.slice(0,s) + abbrev + ta.value.slice(e);
-    if (weekData.jours) weekData.jours[dayIndex].plans[planIndex].contenu = ta.value;
+    if (weekData.jours) weekData.jours[di].plans[pi].contenu = ta.value;
     ta.focus(); ta.selectionStart = ta.selectionEnd = s + abbrev.length;
   };
 
   async function save(published) {
-    const weekKey = getWeekKey(getMondayOfWeek(currentWeekOffset));
-    const message = document.getElementById('message-semaine')?.value.trim() || '';
+    var weekKey = getWeekKey(getMondayOfWeek(currentWeekOffset));
+    var message = (document.getElementById('message-semaine').value || '').trim();
     try {
-      await setDoc(doc(db, "plannings", weekKey), {
-        jours: weekData.jours, published, message, updatedAt: serverTimestamp()
-      });
+      await setDoc(doc(db,'plannings',weekKey), {jours: weekData.jours, published: published, message: message, updatedAt: serverTimestamp()});
       return true;
-    } catch(e) { showToast('Erreur lors de la sauvegarde', true); return false; }
+    } catch(e) { showToast('Erreur de sauvegarde', 'err'); return false; }
   }
-
-  window.saveDraft = async () => {
-    if (await save(false)) { showToast('💾 Brouillon enregistré — invisible pour les adhérents'); renderWeek(); }
-  };
-  window.publish = async () => {
-    const btn = document.getElementById('btn-pub');
-    btn.disabled = true; btn.textContent = 'Publication...';
-    if (await save(true)) { showToast('✓ Planning publié ! Les adhérents peuvent le voir.'); renderWeek(); }
+  window.saveDraft  = async function() { if (await save(false)) { showToast('💾 Brouillon enregistré'); renderWeek(); } };
+  window.publish    = async function() {
+    var btn = document.getElementById('btn-pub'); btn.disabled = true; btn.textContent = 'Publication...';
+    if (await save(true)) { showToast('✓ Planning publié !'); renderWeek(); }
     btn.disabled = false; btn.textContent = '📤 Publier la semaine';
   };
-  window.unpublish = async () => {
-    if (await save(false)) { showToast('🔒 Planning dépublié — plus visible pour les adhérents'); renderWeek(); }
-  };
-  window.changeWeek = (dir) => { currentWeekOffset += dir; renderWeek(); };
-  window.logout = () => signOut(auth).then(() => window.location.href = 'index.html');
+  window.unpublish  = async function() { if (await save(false)) { showToast('🔒 Planning dépublié','warn'); renderWeek(); } };
+  window.changeWeek = function(dir) { currentWeekOffset += dir; renderWeek(); };
 
-  let redirecting = false;
-
-  onAuthStateChanged(auth, async (user) => {
-    if (redirecting) return;
-    if (!user) {
-      redirecting = true;
-      window.location.href = 'index.html';
-      return;
-    }
+  window.loadCompList = async function() {
+    var div = document.getElementById('comp-list-container');
+    div.innerHTML = '<div class="loading"><div class="spin"></div> Chargement...</div>';
     try {
-      const snap = await getDoc(doc(db, "users", user.uid));
-      if (!snap.exists() || snap.data().role !== 'admin') {
-        redirecting = true;
-        window.location.href = 'planning.html';
-        return;
+      var snap = await getDocs(collection(db,'race_plans'));
+      var comps = [];
+      snap.forEach(function(d) { comps.push(Object.assign({id:d.id}, d.data())); });
+      comps.sort(function(a,b) { return new Date(a.date_course) - new Date(b.date_course); });
+      if (!comps.length) { div.innerHTML = '<p style="color:var(--mut);font-size:13px;padding:20px 0">Aucun plan créé.</p>'; return; }
+      div.innerHTML = comps.map(function(comp) {
+        var bc  = comp.status==='published' ? 'status-published' : 'status-draft';
+        var bt  = comp.status==='published' ? '&#9679; Publié' : '&#9679; Brouillon';
+        var cid = comp.id;
+        var cnom = (comp.nom||'').replace(/'/g, "\\'");
+        var dists = (comp.distances||[]).map(function(d){return d.label;}).join(' / ');
+        var nbSem = comp.semaines ? comp.semaines.length : '?';
+        var pubBtn = comp.status!=='published'
+          ? '<button class="btn-success" onclick="publishComp(\'' + cid + '\')">&#9654; Publier</button>'
+          : '<button class="btn-warn" onclick="unpublishComp(\'' + cid + '\')">&#9646;&#9646; Dépublier</button>';
+        var delBtn = '<button class="btn-danger" onclick="confirmDelete(\'' + cid + '\', \'' + cnom + '\')">&#128465; Supprimer</button>';
+        return '<div class="comp-item">'
+          + '<div class="comp-item-info">'
+          + '<div class="comp-item-name">' + comp.nom + ' <span class="status-badge ' + bc + '" style="margin-left:8px">' + bt + '</span></div>'
+          + '<div class="comp-item-meta">&#128197; ' + comp.date_course + ' &middot; ' + dists + ' &middot; ' + nbSem + ' semaines</div>'
+          + '</div>'
+          + '<div class="comp-item-actions">' + pubBtn + delBtn + '</div>'
+          + '</div>';
+      }).join('');
+    } catch(e) { div.innerHTML = '<p style="color:#ff6b6b;font-size:13px">Erreur : ' + e.message + '</p>'; }
+  };
+
+  window.publishComp   = async function(id) { await setDoc(doc(db,'race_plans',id),{status:'published'},{merge:true}); showToast('✓ Plan publié !'); window.loadCompList(); };
+  window.unpublishComp = async function(id) { await setDoc(doc(db,'race_plans',id),{status:'draft'},{merge:true}); showToast('Plan dépublié','warn'); window.loadCompList(); };
+  window.confirmDelete = function(id, nom) {
+    document.getElementById('modal-title').textContent = 'Supprimer ce plan ?';
+    document.getElementById('modal-body').textContent  = 'Le plan "' + nom + '" et tous les suivis seront supprimés définitivement.';
+    document.getElementById('modal-confirm').onclick   = function() { deleteComp(id); };
+    document.getElementById('modal').classList.add('show');
+  };
+  async function deleteComp(id) {
+    closeModal();
+    try {
+      await deleteDoc(doc(db,'race_plans',id));
+      var ss = await getDocs(collection(db,'race_suivi'));
+      var td = [];
+      ss.forEach(function(d) { if (d.id.indexOf('_'+id) >= 0) td.push(d.id); });
+      await Promise.all(td.map(function(sid) { return deleteDoc(doc(db,'race_suivi',sid)); }));
+      showToast('Plan supprimé (' + td.length + ' suivi(s) effacé(s))');
+      window.loadCompList();
+    } catch(e) { showToast('Erreur : '+e.message,'err'); }
+  }
+
+  window.handleDrop = function(e) {
+    e.preventDefault();
+    document.getElementById('upload-zone').classList.remove('dragover');
+    var f = e.dataTransfer.files[0]; if (f) readExcel(f);
+  };
+  window.handleFile = function(e) { var f = e.target.files[0]; if (f) readExcel(f); };
+
+  function readExcel(file) {
+    if (!file.name.endsWith('.xlsx')) { showToast('Fichier .xlsx uniquement','err'); return; }
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        var wb = XLSX.read(e.target.result, {type:'array', cellDates:true, cellStyles:true});
+        parsedPlan = parseTemplate(wb);
+        showPreview(parsedPlan);
+      } catch(err) { showToast('Erreur : '+err.message,'err'); }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function normDate(d) {
+    if (d instanceof Date) return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+    return String(d||'');
+  }
+  function isoDate(d) {
+    if (d instanceof Date) return d.toISOString().split('T')[0];
+    var p = String(d||'').split('/');
+    if (p.length===3) return p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0');
+    return '';
+  }
+  function formatDateFR(s) {
+    if (!s) return '?';
+    var d;
+    if (String(s).indexOf('T')>=0) { d=new Date(s); }
+    else { var p=String(s).split('/'); if(p.length===3) d=new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0])); else return s; }
+    if (isNaN(d.getTime())) return s;
+    return d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  }
+
+  function parseTemplate(wb) {
+    var ws1 = wb.Sheets['INFOS COURSE'];
+    if (!ws1) throw new Error('Feuille "INFOS COURSE" introuvable');
+    var nom = ws1['B5'] ? ws1['B5'].v : '';
+    if (!nom) throw new Error('Nom manquant (B5)');
+    var distances = [];
+    for (var r = 14; r <= 17; r++) {
+      var label = ws1['B' + r] ? ws1['B' + r].v : null;
+      var dist  = ws1['A' + r] ? ws1['A' + r].v : null;
+      if (label && String(label).trim()) {
+        distances.push({ dist: String(dist || '').trim(), label: String(label).trim() });
       }
-      renderWeek();
-    } catch(e) {
-      console.error('Erreur auth:', e);
     }
+    if (!distances.length) throw new Error('Aucune distance (B14 à B17)');
+    var ws2 = wb.Sheets['PLAN'];
+    if (!ws2) throw new Error('Feuille "PLAN" introuvable');
+    var rows = XLSX.utils.sheet_to_json(ws2, { header: 1, defval: '' });
+    var dataRows = rows.slice(3).filter(function(r) {
+      return /^S\d+$/.test(String(r[0] || '').trim());
+    });
+    var COLS = ['E','F','G','H','I','J','K'];
+    var weeksMap = {}, weekOrder = [];
+    var allAddrs = Object.keys(ws2).filter(function(k) { return !k.startsWith('!'); });
+    dataRows.forEach(function(r) {
+      var num   = String(r[0] || '').trim();
+      var phase = String(r[1] || '').trim();
+      var titre = String(r[2] || '').trim();
+      var dist  = String(r[3] || '').trim();
+      if (!num) return;
+      if (!weeksMap[num]) { weeksMap[num] = { num: num, phase: phase, titre: titre, distances: {} }; weekOrder.push(num); }
+      // Trouver la ligne exacte dans ws2 pour col A=num ET col D=dist
+      var realRow = null;
+      allAddrs.forEach(function(addr) {
+        var col = addr.replace(/[0-9]/g, '');
+        var row = parseInt(addr.replace(/[A-Z]/gi, ''));
+        if (col === 'A' && String((ws2[addr] || {}).v || '').trim() === num && realRow === null) {
+          var dCell = ws2['D' + row];
+          if (dCell && String(dCell.v || '').trim() === dist) realRow = row;
+        }
+      });
+      if (realRow === null) return;
+      var days = COLS.map(function(col) {
+        var cell = ws2[col + realRow] || null;
+        return { html: cellToHtml(cell), bg: getCellBg(cell) };
+      });
+      var di = distances.findIndex(function(d) {
+        return d.dist === dist || d.label.indexOf(dist) >= 0 || dist.indexOf(d.dist) >= 0;
+      });
+      if (di >= 0) weeksMap[num].distances[String(di)] = days;
+    });
+    return {
+      nom: nom,
+      date_course: normDate(ws1['B6'] ? ws1['B6'].v : ''),
+      lieu: String((ws1['B7'] ? ws1['B7'].v : '') || ''),
+      notes: String((ws1['B10'] ? ws1['B10'].v : '') || ''),
+      nb_semaines: parseInt((ws1['B20'] ? ws1['B20'].v : '') || 0) || 0,
+      date_debut: normDate(ws1['B21'] ? ws1['B21'].v : ''),
+      date_debut_iso: isoDate(ws1['B21'] ? ws1['B21'].v : ''),
+      distances: distances,
+      semaines: weekOrder.map(function(n) { return weeksMap[n]; }),
+      status: 'draft',
+      created_at: new Date().toISOString()
+    };
+  }
+
+  function showPreview(plan) {
+    var area  = document.getElementById('preview-area');
+    var dists = plan.distances.map(function(d,i) {
+      return '<span class="dist-pill" style="color:'+DIST_COLORS[i]+';border-color:'+DIST_COLORS[i]+'">'+d.label+'</span>';
+    }).join('');
+    var verif = '';
+    if (plan.semaines[0]) {
+      verif = Object.entries(plan.semaines[0].distances).map(function(entry) {
+        var k=entry[0], v=entry[1];
+        var txt = Array.isArray(v) && v[1] ? (typeof v[1]==='object' ? v[1].html.replace(/<[^>]+>/g,'') : String(v[1])) : '';
+        return 'Dist.'+k+' : '+txt.substring(0,40)+'...';
+      }).join(' · ');
+    } else { verif = 'Aucune semaine'; }
+    area.innerHTML = '<div class="preview-card">'
+      + '<div class="preview-title">✅ Fichier lu — Vérifie avant d\'importer</div>'
+      + '<div class="preview-grid">'
+      + '<div class="preview-item"><label>Nom</label><span>'+plan.nom+'</span></div>'
+      + '<div class="preview-item"><label>Date course</label><span>'+formatDateFR(plan.date_course)+'</span></div>'
+      + '<div class="preview-item"><label>Lieu</label><span>'+(plan.lieu||'—')+'</span></div>'
+      + '<div class="preview-item"><label>Début</label><span>'+plan.date_debut+'</span></div>'
+      + '<div class="preview-item"><label>Semaines</label><span>'+plan.semaines.length+'</span></div>'
+      + '</div>'
+      + '<div style="margin-bottom:8px;font-size:12px;color:var(--mut)">Distances :</div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'+dists+'</div>'
+      + '<div style="font-size:11px;color:var(--mut);margin-bottom:12px;padding:8px;background:var(--surf2);border-radius:8px"><strong style="color:var(--txt)">Vérif S1 :</strong> '+verif+'</div>'
+      + '<div id="preview-actions-area"><div class="loading"><div class="spin"></div> Vérification...</div></div>'
+      + '</div>';
+    area.style.display = 'block';
+    document.getElementById('upload-zone').style.display = 'none';
+    checkExisting(plan.nom);
+  }
+
+  async function checkExisting(nom) {
+    var div = document.getElementById('preview-actions-area');
+    try {
+      var snap = await getDocs(collection(db,'race_plans'));
+      var eid = null;
+      snap.forEach(function(d) { if (d.data().nom===nom) eid=d.id; });
+      if (eid) {
+        div.innerHTML = '<div style="background:rgba(245,158,11,.1);border:.5px solid rgba(245,158,11,.3);border-radius:10px;padding:12px;margin-bottom:12px">'
+          + '<div style="color:var(--amb);font-weight:600;margin-bottom:6px">⚠ Un plan "'+nom+'" existe déjà</div>'
+          + '<div style="font-size:12px;color:var(--mut)">"Mettre à jour" remplace les séances et conserve les suivis.</div></div>'
+          + '<div style="display:flex;gap:10px;flex-wrap:wrap">'
+          + '<button class="btn-warn" onclick="importPlan(\'update\',\'' + eid + '\')">🔄 Mettre à jour</button>'
+          + '<button class="btn-success" onclick="importPlan(\'draft\')">💾 Nouveau brouillon</button>'
+          + '<button class="btn-h" onclick="cancelImport()">✕ Annuler</button></div>';
+      } else {
+        div.innerHTML = '<div style="display:flex;gap:10px;flex-wrap:wrap">'
+          + '<button class="btn-success" onclick="importPlan(\'draft\')">💾 Brouillon</button>'
+          + '<button class="btn-publish" style="flex:unset;padding:7px 16px;font-size:12px" onclick="importPlan(\'published\')">▶ Publier</button>'
+          + '<button class="btn-h" onclick="cancelImport()">✕ Annuler</button></div>';
+      }
+    } catch(e) {
+      div.innerHTML = '<div style="display:flex;gap:10px">'
+        + '<button class="btn-success" onclick="importPlan(\'draft\')">💾 Brouillon</button>'
+        + '<button class="btn-h" onclick="cancelImport()">✕</button></div>';
+    }
+  }
+
+  window.importPlan = async function(status, eid) {
+    if (!parsedPlan) return;
+    try {
+      if (status==='update' && eid) {
+        var ex = await getDoc(doc(db,'race_plans',eid));
+        parsedPlan.status = ex.exists() ? ex.data().status : 'draft';
+        await setDoc(doc(db,'race_plans',eid), parsedPlan);
+        showToast('✓ Plan mis à jour — suivis conservés !');
+      } else {
+        parsedPlan.status = status;
+        await setDoc(doc(db,'race_plans','plan_'+Date.now()), parsedPlan);
+        showToast(status==='published' ? '✓ Plan publié !' : '✓ Brouillon sauvegardé !');
+      }
+      parsedPlan = null; cancelImport(); switchSub('list'); window.loadCompList();
+    } catch(e) { showToast('Erreur : '+e.message,'err'); }
+  };
+
+  window.cancelImport = function() {
+    document.getElementById('preview-area').style.display = 'none';
+    document.getElementById('preview-area').innerHTML = '';
+    document.getElementById('upload-zone').style.display = 'block';
+    document.getElementById('file-input').value = '';
+    parsedPlan = null;
+  };
+
+  window.exportPlanning = async function() {
+    var startVal = document.getElementById('export-date-start').value;
+    var endVal   = document.getElementById('export-date-end').value;
+    var status   = document.getElementById('export-status');
+    if (!startVal || !endVal) { status.textContent = '⚠ Choisis les deux dates.'; return; }
+    var startDate = new Date(startVal), endDate = new Date(endVal);
+    if (startDate > endDate) { status.textContent = '⚠ Date de début après la fin.'; return; }
+    status.textContent = '⏳ Chargement...';
+    var TYPES_LABELS = {repos:'Repos',cotes:'Côtes',seuil:'Seuil',sortie:'Sortie longue',footing:'Footing',course:'Course',rm:'Renforcement',autre:'Autre'};
+    function getMonday(d) { var day=d.getDay()||7,m=new Date(d); m.setDate(d.getDate()-day+1); m.setHours(0,0,0,0); return m; }
+    function wKey(m) { return m.toISOString().split('T')[0]; }
+    function wNum(date) {
+      var d=new Date(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate())),dn=d.getUTCDay()||7;
+      d.setUTCDate(d.getUTCDate()+4-dn);
+      var ys=new Date(Date.UTC(d.getUTCFullYear(),0,1));
+      return 'S'+String(Math.ceil((((d-ys)/86400000)+1)/7)).padStart(2,'0');
+    }
+    var mondays=[], cur=getMonday(startDate), end=getMonday(endDate);
+    while(cur<=end){ mondays.push(new Date(cur)); cur.setDate(cur.getDate()+7); }
+    var rows=[];
+    for(var mi=0;mi<mondays.length;mi++){
+      var monday=mondays[mi], weekKey=wKey(monday), weekNum=wNum(monday);
+      var sunday=new Date(monday); sunday.setDate(monday.getDate()+6);
+      try {
+        var snap=await getDoc(doc(db,'plannings',weekKey));
+        var data=snap.exists()?snap.data():{};
+        var jours=data.jours||Array(7).fill(null).map(function(){return{plans:[{type:'repos',contenu:'',location:''}]};});
+        var statut=data.published?'Publié':snap.exists()?'Brouillon':'Vide';
+        var lbl=weekNum+' · '+monday.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+' – '+sunday.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+        rows.push([lbl,'','','',statut,data.message||'']);
+        rows.push(['Jour','Date','Type','Lieu','Contenu','']);
+        var normalJ=jours.map(function(j){if(!j)return{plans:[{type:'repos',contenu:'',location:''}]};if(!j.plans)return{plans:[{type:j.type||'repos',contenu:j.contenu||'',location:''}]};return j;});
+        for(var i=0;i<7;i++){
+          var date=new Date(monday); date.setDate(monday.getDate()+i);
+          var plans=normalJ[i].plans;
+          plans.forEach(function(plan,pi){
+            rows.push([pi===0?JOURS[i]:'', pi===0?date.toLocaleDateString('fr-FR'):'', TYPES_LABELS[plan.type]||plan.type, plan.location||'', plan.contenu||'','']);
+          });
+        }
+        rows.push(['','','','','','']);
+      } catch(e) { rows.push([weekNum,'Erreur','','','','']); }
+    }
+    status.textContent = '📊 Génération...';
+    var wb2=XLSX.utils.book_new(), ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:12},{wch:14},{wch:22},{wch:20},{wch:60},{wch:10}];
+    XLSX.utils.book_append_sheet(wb2,ws,'Planning GGT');
+    var sf=startDate.toLocaleDateString('fr-FR').replace(/\//g,'-');
+    var ef=endDate.toLocaleDateString('fr-FR').replace(/\//g,'-');
+    XLSX.writeFile(wb2,'GGT_Planning_'+sf+'_'+ef+'.xlsx');
+    status.textContent='✓ Téléchargé !';
+    setTimeout(function(){status.textContent='';},3000);
+  };
+
+  window.logout = function() { signOut(auth).then(function() { window.location.href='index.html'; }); };
+
+  var redirecting = false;
+  onAuthStateChanged(auth, async function(user) {
+    if (redirecting) return;
+    if (!user) { redirecting=true; window.location.href='index.html'; return; }
+    try {
+      var snap = await getDoc(doc(db,'users',user.uid));
+      if (!snap.exists() || snap.data().role !== 'admin') { redirecting=true; window.location.href='planning.html'; return; }
+      document.getElementById('user-name').textContent = [snap.data().prenom||'',snap.data().nom||''].filter(Boolean).join(' ') || user.email;
+      renderWeek();
+    } catch(e) { console.error('Erreur auth:', e); }
   });
 </script>
 </body>

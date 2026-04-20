@@ -409,72 +409,68 @@ function showToast(msg, type) {
   }
 
   function cellToHtml(cell) {
-    if (!cell) return 'Repos';
+    if (!cell || cell.v === undefined || cell.v === null || String(cell.v) === '') return 'Repos';
 
-    // Fonction pour convertir le texte brut en HTML (sauts de ligne → <br>)
-    function escTxt(s) {
-      return String(s || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/\r\n|\r|\n/g, '<br>');
+    var raw = String(cell.v);
+
+    // Convertir un segment texte en HTML safe avec <br>
+    function seg(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
     }
 
-    // ── Rich Text via cell.r (XML des runs) ──
+    // Extraire les runs depuis cell.r par regex (évite les problèmes de namespace DOMParser)
+    var runs = [];
     if (cell.r) {
-      try {
-        var parser = new DOMParser();
-        var safe   = cell.r.replace(/&(?!amp;|lt;|gt;|quot;|apos;)/g, '&amp;');
-        var xmlDoc = parser.parseFromString('<root>' + safe + '</root>', 'text/xml');
-        var runs   = xmlDoc.querySelectorAll('r');
-        if (runs.length > 0) {
-          var html = '';
-          runs.forEach(function(run) {
-            var rPr    = run.querySelector('rPr');
-            var t      = run.querySelector('t');
-            if (!t) return;
-            var runTxt = escTxt(t.textContent || '');
-            if (!runTxt) return;
-            var runStyles = [];
-            if (rPr) {
-              var colorEl = rPr.querySelector('color');
-              if (colorEl && colorEl.getAttribute('rgb')) {
-                var rgb = normalizeRgb(colorEl.getAttribute('rgb'));
-                if (rgb && rgb !== '333333' && rgb !== '000000' && rgb !== 'FFFFFF') {
-                  runStyles.push('color:#' + rgb);
-                }
-              }
-              if (rPr.querySelector('b')) runStyles.push('font-weight:bold');
-              if (rPr.querySelector('i')) runStyles.push('font-style:italic');
-            }
-            html += runStyles.length
-              ? '<span style="' + runStyles.join(';') + '">' + runTxt + '</span>'
-              : runTxt;
-          });
-          if (html.trim()) return html;
+      var runRe = /<r>([\s\S]*?)<\/r>/g, rm;
+      while ((rm = runRe.exec(cell.r)) !== null) {
+        var runXml = rm[1];
+        // Texte du run
+        var tMatch = runXml.match(/<t[^>]*>([\s\S]*?)<\/t>/);
+        if (!tMatch) continue;
+        var txt = tMatch[1]
+          .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')
+          .replace(/&quot;/g,'"').replace(/&#10;/g,'\n').replace(/&#13;/g,'\r');
+        // Styles
+        var styles = [];
+        var colorMatch = runXml.match(/rgb="([0-9A-Fa-f]{6,8})"/);
+        if (colorMatch) {
+          var rgb = normalizeRgb(colorMatch[1]);
+          if (rgb && rgb !== '333333' && rgb !== '000000' && rgb !== 'FFFFFF') {
+            styles.push('color:#' + rgb);
+          }
         }
-      } catch(e) {}
+        if (/<b\/>/.test(runXml) || /<b>/.test(runXml)) styles.push('font-weight:bold');
+        if (/<i\/>/.test(runXml) || /<i>/.test(runXml)) styles.push('font-style:italic');
+        runs.push({ txt: txt, styles: styles });
+      }
     }
 
-    // ── Cellule simple ──
-    var val = escTxt(cell.v || '');
-    if (!val) return 'Repos';
+    // Rich Text avec au moins un style
+    if (runs.length && runs.some(function(r){ return r.styles.length > 0; })) {
+      var html = '';
+      runs.forEach(function(r) {
+        if (!r.txt) return;
+        var s = seg(r.txt);
+        html += r.styles.length ? '<span style="'+r.styles.join(';')+'">'+s+'</span>' : s;
+      });
+      return html || seg(raw);
+    }
 
-    var styles = [];
+    // Cellule simple — styles globaux éventuels
+    var gStyles = [];
     if (cell.s && cell.s.font) {
       var fc = cell.s.font.color;
       if (fc && fc.rgb) {
         var frgb = normalizeRgb(fc.rgb);
         if (frgb && frgb !== '333333' && frgb !== '000000' && frgb !== 'E8EAF0') {
-          styles.push('color:#' + frgb);
+          gStyles.push('color:#' + frgb);
         }
       }
-      if (cell.s.font.bold)   styles.push('font-weight:bold');
-      if (cell.s.font.italic) styles.push('font-style:italic');
+      if (cell.s.font.bold)   gStyles.push('font-weight:bold');
+      if (cell.s.font.italic) gStyles.push('font-style:italic');
     }
-    return styles.length
-      ? '<span style="' + styles.join(';') + '">' + val + '</span>'
-      : val;
+    var escaped = seg(raw);
+    return gStyles.length ? '<span style="'+gStyles.join(';')+'">'+escaped+'</span>' : escaped;
   }
   function getTypeStyle(type) {
     var map = {

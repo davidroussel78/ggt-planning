@@ -411,66 +411,20 @@ function showToast(msg, type) {
   function cellToHtml(cell) {
     if (!cell || cell.v === undefined || cell.v === null || String(cell.v) === '') return 'Repos';
 
-    var raw = String(cell.v);
-
-    // Convertir un segment texte en HTML safe avec <br>
-    function seg(s) {
-      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+    // cell.h est généré par SheetJS avec les couleurs et les sauts de ligne
+    // Il suffit de le nettoyer
+    if (cell.h) {
+      var h = cell.h
+        .replace(/&#x000d;/gi, '')          // retour chariot superflu
+        .replace(/<br\s*\/?>/gi, '<br>')     // normaliser <br/>  → <br>
+        .replace(/&apos;/g, "'")             // &apos; → '
+        .replace(/&#10;/g, '<br>')           // &#10; → <br>
+        .replace(/&#13;/g, '');              // &#13; → vide
+      if (h && h.trim()) return h;
     }
 
-    // Extraire les runs depuis cell.r par regex (évite les problèmes de namespace DOMParser)
-    var runs = [];
-    if (cell.r) {
-      var runRe = /<r>([\s\S]*?)<\/r>/g, rm;
-      while ((rm = runRe.exec(cell.r)) !== null) {
-        var runXml = rm[1];
-        // Texte du run
-        var tMatch = runXml.match(/<t[^>]*>([\s\S]*?)<\/t>/);
-        if (!tMatch) continue;
-        var txt = tMatch[1]
-          .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')
-          .replace(/&quot;/g,'"').replace(/&#10;/g,'\n').replace(/&#13;/g,'\r');
-        // Styles
-        var styles = [];
-        var colorMatch = runXml.match(/rgb="([0-9A-Fa-f]{6,8})"/);
-        if (colorMatch) {
-          var rgb = normalizeRgb(colorMatch[1]);
-          if (rgb && rgb !== '333333' && rgb !== '000000' && rgb !== 'FFFFFF') {
-            styles.push('color:#' + rgb);
-          }
-        }
-        if (/<b\/>/.test(runXml) || /<b>/.test(runXml)) styles.push('font-weight:bold');
-        if (/<i\/>/.test(runXml) || /<i>/.test(runXml)) styles.push('font-style:italic');
-        runs.push({ txt: txt, styles: styles });
-      }
-    }
-
-    // Rich Text avec au moins un style
-    if (runs.length && runs.some(function(r){ return r.styles.length > 0; })) {
-      var html = '';
-      runs.forEach(function(r) {
-        if (!r.txt) return;
-        var s = seg(r.txt);
-        html += r.styles.length ? '<span style="'+r.styles.join(';')+'">'+s+'</span>' : s;
-      });
-      return html || seg(raw);
-    }
-
-    // Cellule simple — styles globaux éventuels
-    var gStyles = [];
-    if (cell.s && cell.s.font) {
-      var fc = cell.s.font.color;
-      if (fc && fc.rgb) {
-        var frgb = normalizeRgb(fc.rgb);
-        if (frgb && frgb !== '333333' && frgb !== '000000' && frgb !== 'E8EAF0') {
-          gStyles.push('color:#' + frgb);
-        }
-      }
-      if (cell.s.font.bold)   gStyles.push('font-weight:bold');
-      if (cell.s.font.italic) gStyles.push('font-style:italic');
-    }
-    var escaped = seg(raw);
-    return gStyles.length ? '<span style="'+gStyles.join(';')+'">'+escaped+'</span>' : escaped;
+    // Fallback : cell.v avec \n → <br>
+    return String(cell.v).replace(/\n/g, '<br>');
   }
   function getTypeStyle(type) {
     var map = {

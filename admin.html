@@ -413,65 +413,62 @@ function showToast(msg, type) {
 
     var raw = String(cell.v);
 
-    // ── Extraire les styles depuis cell.r par regex ──
-    // Structure SheetJS : <rPr><color rgb="FF00B050"/><b/></rPr><t>CE</t>
-    // Les runs ne sont PAS wrappés dans <r>...</r> systématiquement
-    var coloredRuns = [];
+    // Convertir un texte brut en HTML safe avec \n → <br>
+    function toHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+               .split('\n').join('<br>');
+    }
+
+    // ── Parser cell.r par regex pour extraire TOUS les runs (avec et sans style) ──
     if (cell.r) {
-      // Chercher les blocs rPr+t
-      var re = /<rPr>([\s\S]*?)<\/rPr>\s*<t[^>]*>([\s\S]*?)<\/t>/g;
+      var runs = [];
+      // Capturer les blocs <rPr>...</rPr><t ...>...</t> (run avec style)
+      // ET les blocs <t ...>...</t> seuls (run sans style)
+      // On reconstruit en parcourant le XML run par run
+      var xml = cell.r;
+      var pos = 0;
+      var runRe = /(?:<rPr>([\s\S]*?)<\/rPr>\s*)?<t([^>]*)>([\s\S]*?)<\/t>/g;
       var m;
-      while ((m = re.exec(cell.r)) !== null) {
-        var rPrXml = m[1];
-        var txt = m[2]
+      while ((m = runRe.exec(xml)) !== null) {
+        var rPrContent = m[1] || '';
+        var tContent   = m[3] || '';
+        // Décoder les entités XML dans le texte
+        var txt = tContent
           .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')
           .replace(/&quot;/g,'"').replace(/&apos;/g,"'")
           .replace(/&#10;/g,'\n').replace(/&#13;/g,'');
+        // Extraire les styles depuis rPr
         var styles = [];
-        var cm = rPrXml.match(/rgb="([0-9A-Fa-f]{6,8})"/);
-        if (cm) {
-          var rgb = normalizeRgb(cm[1]);
-          if (rgb && rgb !== '333333' && rgb !== '000000' && rgb !== 'FFFFFF') {
-            styles.push('color:#' + rgb);
+        if (rPrContent) {
+          var cm = rPrContent.match(/rgb="([0-9A-Fa-f]{6,8})"/);
+          if (cm) {
+            var rgb = normalizeRgb(cm[1]);
+            if (rgb && rgb !== '333333' && rgb !== '000000' && rgb !== 'FFFFFF') {
+              styles.push('color:#' + rgb);
+            }
           }
+          if (/<b\s*\/>|<b>/.test(rPrContent)) styles.push('font-weight:bold');
+          if (/<i\s*\/>|<i>/.test(rPrContent)) styles.push('font-style:italic');
         }
-        if (/<b\s*\/>|<b>/.test(rPrXml)) styles.push('font-weight:bold');
-        if (/<i\s*\/>|<i>/.test(rPrXml)) styles.push('font-style:italic');
-        coloredRuns.push({ txt: txt, styles: styles });
+        runs.push({ txt: txt, styles: styles });
       }
-      // Chercher aussi les <t> sans <rPr> (runs sans style)
-      // en reconstruisant depuis raw si on a des runs
+
+      // Si on a des runs ET au moins un avec un style → Rich Text
+      if (runs.length > 0) {
+        var html = '';
+        runs.forEach(function(run) {
+          if (!run.txt && run.txt !== '0') return;
+          var escaped = toHtml(run.txt);
+          html += run.styles.length
+            ? '<span style="' + run.styles.join(';') + '">' + escaped + '</span>'
+            : escaped;
+        });
+        if (html.trim()) return html;
+      }
     }
 
-    // ── Reconstruire le HTML depuis raw + styles des runs ──
-    if (coloredRuns.length && coloredRuns.some(function(r){ return r.styles.length > 0; })) {
-      var html = '';
-      var pos = 0;
-      coloredRuns.forEach(function(run) {
-        if (!run.txt) return;
-        var len = run.txt.length;
-        // Trouver la position dans raw
-        var found = raw.indexOf(run.txt, pos);
-        if (found >= pos) pos = found;
-        // Convertir \n en <br>
-        var lines = run.txt.split('\n');
-        var escaped = lines.map(function(l){
-          return l.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        }).join('<br>');
-        html += run.styles.length
-          ? '<span style="' + run.styles.join(';') + '">' + escaped + '</span>'
-          : escaped;
-        pos += len;
-      });
-      if (html.trim()) return html;
-    }
-
-    // ── Cellule simple : raw avec \n → <br> + styles globaux ──
-    var lines = raw.split('\n');
-    var escaped = lines.map(function(l){
-      return l.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }).join('<br>');
-
+    // ── Cellule simple : raw + styles globaux ──
+    var escaped = toHtml(raw);
     var gStyles = [];
     if (cell.s && cell.s.font) {
       var fc = cell.s.font.color;

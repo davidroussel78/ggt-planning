@@ -5,7 +5,8 @@
 <link rel="icon" type="image/png" href="favicon.png">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>GGT — Administration</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared-styles.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -115,6 +116,7 @@ textarea::placeholder{color:var(--mut)}
 .loading{display:flex;align-items:center;justify-content:center;min-height:120px;color:var(--mut);font-size:14px;gap:10px}
 .spin{width:18px;height:18px;border:2px solid var(--brd);border-top-color:var(--acc);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+
 </style>
 </head>
 <body>
@@ -123,8 +125,8 @@ textarea::placeholder{color:var(--mut)}
     <img src="logo-ggt.png" alt="GGT">
     <div><h1>GGT Admin</h1><p>CoachDav</p></div>
   </div>
-  <div style="display:flex;gap:8px;align-items:center">
-    <span id="user-name" style="font-size:13px;color:var(--mut)"></span>
+  <div class="header-right">
+    <span id="user-name" class="user-badge">...</span>
     <a href="connexions.html" class="btn-h">👥 Connexions</a>
     <a href="planning.html" class="btn-h">👁 Voir comme adhérent</a>
     <button class="btn-h" onclick="logout()">Déconnexion</button>
@@ -135,6 +137,7 @@ textarea::placeholder{color:var(--mut)}
   <div class="main-tabs">
     <button class="main-tab on" id="tab-planning-btn" onclick="switchMain('planning')">📅 Planning hebdo</button>
     <button class="main-tab" id="tab-comp-btn" onclick="switchMain('comp')">🏅 Plans de compétition</button>
+    <button class="main-tab" id="tab-adherents-btn" onclick="window.location.href='admin-adherents.html'">👥 Adhérents</button>
     <button class="main-tab" id="tab-export-btn" onclick="switchMain('export')">📥 Export Excel</button>
     <button class="main-tab" id="tab-lexique-btn" onclick="switchMain('lexique')">📖 Lexique du site</button>
   </div>
@@ -158,6 +161,7 @@ textarea::placeholder{color:var(--mut)}
     </div>
     <div class="days-list" id="days-list"><div class="loading"><div class="spin"></div> Chargement...</div></div>
     <div class="actions">
+      <button class="btn-save" onclick="copyPrevWeek()" title="Copie le planning de la semaine précédente sur cette semaine">📋 Copier sem. précédente</button>
       <button class="btn-save" onclick="saveDraft()">💾 Brouillon</button>
       <button class="btn-publish" id="btn-pub" onclick="publish()">📤 Publier la semaine</button>
       <button class="btn-unpublish" id="btn-unpub" onclick="unpublish()" style="display:none">🔒 Dépublier</button>
@@ -224,19 +228,8 @@ textarea::placeholder{color:var(--mut)}
   <!-- LEXIQUE -->
   <div class="tab-section" id="tab-lexique">
     <div style="display:flex;flex-direction:column;gap:16px">
-      <div style="background:var(--surf);border:.5px solid var(--brd);border-radius:14px;padding:20px 24px">
-        <div style="font-size:14px;font-weight:600;margin-bottom:14px;color:var(--acc)">🎨 Couleurs des types de séance</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">
-          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:rgba(156,163,175,0.13)"><span style="font-size:16px">😴</span><div><div style="font-size:12px;font-weight:600">Repos</div><div style="font-size:10px;color:var(--mut)">#D9D9D9 · rgba(156,163,175,0.13)</div></div></div>
-          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:rgba(255,192,0,0.26)"><span style="font-size:16px">🏔️</span><div><div style="font-size:12px;font-weight:600;color:#FFC000">Côtes</div><div style="font-size:10px;color:var(--mut)">#FFC000 · rgba(255,192,0,0.26)</div></div></div>
-          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:rgba(119,181,254,0.26)"><span style="font-size:16px">⚡</span><div><div style="font-size:12px;font-weight:600;color:#77B5FE">Seuil</div><div style="font-size:10px;color:var(--mut)">#77B5FE · rgba(119,181,254,0.26)</div></div></div>
-          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:rgba(120,170,60,0.26)"><span style="font-size:16px">🌲</span><div><div style="font-size:12px;font-weight:600;color:#8fba3a">Sortie</div><div style="font-size:10px;color:var(--mut)">#8FBA3A · rgba(120,170,60,0.26)</div></div></div>
-          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:rgba(143,168,191,0.26)"><span style="font-size:16px">🏃</span><div><div style="font-size:12px;font-weight:600;color:#8FA8BF">Footing</div><div style="font-size:10px;color:var(--mut)">#8FA8BF · rgba(143,168,191,0.26)</div></div></div>
-          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:rgba(245,158,11,0.26)"><span style="font-size:16px">🏅</span><div><div style="font-size:12px;font-weight:600;color:#f59e0b">Course</div><div style="font-size:10px;color:var(--mut)">#F59E0B · rgba(245,158,11,0.26)</div></div></div>
-          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:rgba(168,116,255,0.26)"><span style="font-size:16px">💪</span><div><div style="font-size:12px;font-weight:600;color:#b08fff">Renforcement</div><div style="font-size:10px;color:var(--mut)">#B08FFF · rgba(168,116,255,0.26)</div></div></div>
-          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:rgba(200,185,130,0.22)"><span style="font-size:16px">📋</span><div><div style="font-size:12px;font-weight:600;color:#c8b870">Autre</div><div style="font-size:10px;color:var(--mut)">#C8B870 · rgba(200,185,130,0.22)</div></div></div>
-        </div>
-      </div>
+
+      <!-- ACTIVITÉS SUIVI -->
       <div style="background:var(--surf);border:.5px solid var(--brd);border-radius:14px;padding:20px 24px">
         <div style="font-size:14px;font-weight:600;margin-bottom:14px;color:var(--acc)">🏃 Activités suivi</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:16px">
@@ -255,8 +248,103 @@ textarea::placeholder{color:var(--mut)}
           <div style="padding:6px 14px;border-radius:20px;background:rgba(239,68,68,0.22);font-size:13px">😰 Très difficile</div>
         </div>
       </div>
+
+      <!-- COULEURS SÉANCES -->
       <div style="background:var(--surf);border:.5px solid var(--brd);border-radius:14px;padding:20px 24px">
-        <div style="font-size:14px;font-weight:600;margin-bottom:14px;color:var(--acc)">🔐 Règles Firestore</div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:14px;color:var(--acc)">🎨 Couleurs des types de séance</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:rgba(156,163,175,0.13)"><span style="font-size:16px">😴</span><div><div style="font-size:12px;font-weight:600">Repos</div><div style="font-size:10px;color:var(--mut)">rgba(156,163,175,0.13)</div></div></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:rgba(255,192,0,0.26)"><span style="font-size:16px">🏔️</span><div><div style="font-size:12px;font-weight:600;color:#FFC000">Côtes</div><div style="font-size:10px;color:var(--mut)">rgba(255,192,0,0.26)</div></div></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:rgba(119,181,254,0.26)"><span style="font-size:16px">⚡</span><div><div style="font-size:12px;font-weight:600;color:#77B5FE">Seuil</div><div style="font-size:10px;color:var(--mut)">rgba(119,181,254,0.26)</div></div></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:rgba(120,170,60,0.26)"><span style="font-size:16px">🌲</span><div><div style="font-size:12px;font-weight:600;color:#8fba3a">Sortie</div><div style="font-size:10px;color:var(--mut)">rgba(120,170,60,0.26)</div></div></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:rgba(143,168,191,0.26)"><span style="font-size:16px">🏃</span><div><div style="font-size:12px;font-weight:600;color:#8FA8BF">Footing</div><div style="font-size:10px;color:var(--mut)">rgba(143,168,191,0.26)</div></div></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:rgba(245,158,11,0.26)"><span style="font-size:16px">🏅</span><div><div style="font-size:12px;font-weight:600;color:#f59e0b">Course</div><div style="font-size:10px;color:var(--mut)">rgba(245,158,11,0.26)</div></div></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:rgba(168,116,255,0.26)"><span style="font-size:16px">💪</span><div><div style="font-size:12px;font-weight:600;color:#b08fff">Renforcement</div><div style="font-size:10px;color:var(--mut)">rgba(168,116,255,0.26)</div></div></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:rgba(200,185,130,0.22)"><span style="font-size:16px">📋</span><div><div style="font-size:12px;font-weight:600;color:#c8b870">Autre</div><div style="font-size:10px;color:var(--mut)">rgba(200,185,130,0.22)</div></div></div>
+        </div>
+      </div>
+
+      <!-- PAGES DU SITE -->
+      <div style="background:var(--surf);border:.5px solid var(--brd);border-radius:14px;padding:20px 24px">
+        <div style="font-size:14px;font-weight:600;margin-bottom:14px;color:var(--acc)">📄 Pages du site</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:12px">
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--acc);font-weight:600">index.html</div><div style="color:var(--mut);font-size:11px;margin-top:2px">Page de connexion — Enregistre automatiquement chaque connexion dans Firestore</div></div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--acc);font-weight:600">planning.html</div><div style="color:var(--mut);font-size:11px;margin-top:2px">Planning hebdomadaire — Popup anniversaire automatique — Accès Admin si rôle admin/adhérentadmin</div></div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--acc);font-weight:600">mon-profil.html</div><div style="color:var(--mut);font-size:11px;margin-top:2px">Profil personnel — Modification infos + changement mot de passe (réauthentification requise)</div></div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--acc);font-weight:600">vma.html</div><div style="color:var(--mut);font-size:11px;margin-top:2px">Tableau VMA/FCM personnel — Données stockées dans vma_data</div></div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--acc);font-weight:600">plan-competition.html</div><div style="color:var(--mut);font-size:11px;margin-top:2px">Plans de compétition + suivi perso par distance — Données stockées dans race_suivi</div></div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px;border:.5px solid rgba(79,142,247,.2)"><div style="color:var(--acc);font-weight:600">admin.html</div><div style="color:var(--mut);font-size:11px;margin-top:2px">Interface admin — Planning, Plans compétition, Export Excel, Connexions, Lexique</div></div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px;border:.5px solid rgba(79,142,247,.2)"><div style="color:var(--acc);font-weight:600">admin-adherents.html</div><div style="color:var(--mut);font-size:11px;margin-top:2px">Gestion adhérents — Créer, Voir, Modifier, Suspendre/Réactiver — Accès admin + adhérentadmin</div></div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px;border:.5px solid rgba(79,142,247,.2)"><div style="color:var(--acc);font-weight:600">admin-delete.html</div><div style="color:var(--mut);font-size:11px;margin-top:2px">Suppression complète d'un adhérent — Supprime users + vma_data + race_suivi — Accès admin + adhérentadmin</div></div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px;border:.5px solid rgba(79,142,247,.2)"><div style="color:var(--acc);font-weight:600">connexions.html</div><div style="color:var(--mut);font-size:11px;margin-top:2px">Historique connexions adhérents — Stats + tableau — Auto-suppression après 6 mois</div></div>
+        </div>
+        <div style="font-size:13px;font-weight:600;margin-top:16px;margin-bottom:10px;color:var(--txt)">📦 Fichiers partagés</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:12px">
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:#f59e0b;font-weight:600">shared-styles.css</div><div style="color:var(--mut);font-size:11px;margin-top:2px">Styles communs — Dark mode, variables CSS, header, boutons, badges, responsive</div></div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:#f59e0b;font-weight:600">shared-app.js</div><div style="color:var(--mut);font-size:11px;margin-top:2px">Fonctions communes — firebaseConfig, formatDateTime, getUserDisplayName, getTodayUTC</div></div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:#f59e0b;font-weight:600">logo-ggt.png</div><div style="color:var(--mut);font-size:11px;margin-top:2px">Logo GGT — Affiché dans le header de toutes les pages</div></div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:#f59e0b;font-weight:600">favicon.png</div><div style="color:var(--mut);font-size:11px;margin-top:2px">Icône onglet navigateur</div></div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:#f59e0b;font-weight:600">GGT_Template_Plan_Course.xlsx</div><div style="color:var(--mut);font-size:11px;margin-top:2px">Template Excel — Utilisé dans Admin → Plans compétition pour créer un nouveau plan</div></div>
+        </div>
+      </div>
+
+      <!-- RÔLES -->
+      <div style="background:var(--surf);border:.5px solid var(--brd);border-radius:14px;padding:20px 24px">
+        <div style="font-size:14px;font-weight:600;margin-bottom:14px;color:var(--acc)">👥 Rôles et permissions</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:12px">
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px">
+            <div style="color:#ef4444;font-weight:600">admin</div>
+            <div style="color:var(--mut);font-size:11px;margin-top:2px">Accès total — Modifier planning, créer/modifier/supprimer adhérents, gérer rôles, voir connexions</div>
+          </div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px">
+            <div style="color:var(--acc);font-weight:600">adhérentadmin</div>
+            <div style="color:var(--mut);font-size:11px;margin-top:2px">Accès partiel — Créer/modifier/suspendre adhérents (SAUF modifier les rôles) — Voit bouton Admin</div>
+          </div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px">
+            <div style="color:var(--grn);font-weight:600">adhérent</div>
+            <div style="color:var(--mut);font-size:11px;margin-top:2px">Accès standard — Planning, VMA, Plans compétition, Mon Profil</div>
+          </div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px">
+            <div style="color:var(--amb);font-weight:600">suspendu</div>
+            <div style="color:var(--mut);font-size:11px;margin-top:2px">Bloqué — Redirigé vers index.html à la connexion — Compte Auth conservé</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COLLECTIONS FIRESTORE -->
+      <div style="background:var(--surf);border:.5px solid var(--brd);border-radius:14px;padding:20px 24px">
+        <div style="font-size:14px;font-weight:600;margin-bottom:14px;color:var(--acc)">🗄️ Collections Firestore</div>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:12px">
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px">
+            <div style="color:var(--acc);font-weight:600">plannings</div>
+            <div style="color:var(--mut);font-size:11px;margin-top:2px">Planning hebdomadaire — 1 doc par semaine (lundi à dimanche) — Écriture admin seulement</div>
+          </div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px">
+            <div style="color:var(--acc);font-weight:600">users</div>
+            <div style="color:var(--mut);font-size:11px;margin-top:2px">Profils adhérents — Champs: uid, email, prenom, nom, dob, tel, adresse, role, status, createdAt<br/>Lecture: tous — Écriture: chacun son profil + admin/adhérentadmin</div>
+          </div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px">
+            <div style="color:var(--acc);font-weight:600">vma_data</div>
+            <div style="color:var(--mut);font-size:11px;margin-top:2px">VMA/FCM personnels — DocID = uid — Lecture/Écriture: utilisateur lui-même + admin/adhérentadmin</div>
+          </div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px">
+            <div style="color:var(--acc);font-weight:600">race_plans</div>
+            <div style="color:var(--mut);font-size:11px;margin-top:2px">Plans de compétition (importés depuis Excel) — Écriture admin seulement</div>
+          </div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px">
+            <div style="color:var(--acc);font-weight:600">race_suivi</div>
+            <div style="color:var(--mut);font-size:11px;margin-top:2px">Suivi perso des courses — DocID = uid_competitionId — Lecture/Écriture: tous les connectés</div>
+          </div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px">
+            <div style="color:var(--acc);font-weight:600">connexions</div>
+            <div style="color:var(--mut);font-size:11px;margin-top:2px">Log connexions — Enregistré automatiquement à chaque login — DocID = uid_timestamp — Auto-suppression après 6 mois</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RÈGLES FIRESTORE À JOUR -->
+      <div style="background:var(--surf);border:.5px solid var(--brd);border-radius:14px;padding:20px 24px">
+        <div style="font-size:14px;font-weight:600;margin-bottom:6px;color:var(--acc)">🔒 Règles Firestore (à jour)</div>
         <div style="font-size:11px;color:var(--mut);margin-bottom:10px">À copier-coller dans Firebase → Firestore → Règles</div>
         <pre style="background:var(--bg);border:.5px solid var(--brd);border-radius:8px;padding:14px;font-size:11px;color:#a8b0c8;overflow-x:auto;line-height:1.7">rules_version = '2';
 service cloud.firestore {
@@ -268,11 +356,20 @@ service cloud.firestore {
     }
     match /users/{userId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null &amp;&amp;
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow write: if request.auth != null &amp;&amp; (
+        request.auth.uid == userId ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'adhérentadmin']
+      );
     }
     match /vma_data/{userId} {
-      allow read, write: if request.auth != null &amp;&amp; request.auth.uid == userId;
+      allow read: if request.auth != null &amp;&amp; (
+        request.auth.uid == userId ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'adhérentadmin']
+      );
+      allow write: if request.auth != null &amp;&amp; (
+        request.auth.uid == userId ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'adhérentadmin']
+      );
     }
     match /race_plans/{planId} {
       allow read: if request.auth != null;
@@ -280,37 +377,79 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
     match /race_suivi/{docId} {
-      allow read, write: if request.auth != null &amp;&amp;
-        docId.matches(request.auth.uid + '_.*');
       allow read: if request.auth != null;
+      allow write: if request.auth != null;
     }
     match /connexions/{docId} {
-      allow read: if request.auth != null &amp;&amp;
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow read: if request.auth != null;
       allow write: if request.auth != null;
     }
   }
 }</pre>
       </div>
+
+      <!-- MAINTENANCE -->
+      <div style="background:var(--surf);border:.5px solid var(--brd);border-radius:14px;padding:20px 24px">
+        <div style="font-size:14px;font-weight:600;margin-bottom:14px;color:var(--acc)">🔧 Maintenance — Checklist régulière</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;color:var(--mut)">
+          <div>✓ Mettre à jour le planning chaque semaine (lundi idéalement)</div>
+          <div>✓ Vérifier les connexions (page Connexions) — les vieilles sont auto-supprimées après 6 mois</div>
+          <div>✓ Supprimer un adhérent via admin-delete.html (users + vma_data + race_suivi) — Puis supprimer manuellement de Firebase Auth</div>
+          <div>✓ Si règles Firestore modifiées → mettre à jour le lexique ici</div>
+          <div>✓ Tester sur mobile régulièrement (responsive design)</div>
+          <div>✓ Vérifier qu'il n'y a pas d'erreurs console (F12)</div>
+        </div>
+      </div>
+
+      <!-- ARCHITECTURE -->
+      <div style="background:var(--surf);border:.5px solid var(--brd);border-radius:14px;padding:20px 24px">
+        <div style="font-size:14px;font-weight:600;margin-bottom:14px;color:var(--acc)">🏗️ Architecture du site</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;font-size:12px">
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--acc);font-weight:600">Frontend</div><div style="color:var(--mut);font-size:11px;margin-top:4px">HTML5 / CSS3 / JavaScript ES6<br/>Responsive (mobile + tablette + desktop)</div></div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--acc);font-weight:600">Backend</div><div style="color:var(--mut);font-size:11px;margin-top:4px">Firebase Authentication (login)<br/>Firebase Firestore (base de données)</div></div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--acc);font-weight:600">Hosting</div><div style="color:var(--mut);font-size:11px;margin-top:4px">GitHub Pages (genepigroupetrail)<br/>Déploiement automatique sur push</div></div>
+        </div>
+      </div>
+
+      <!-- NAVIGATION SEMAINES -->
       <div style="background:var(--surf);border:.5px solid var(--brd);border-radius:14px;padding:20px 24px">
         <div style="font-size:14px;font-weight:600;margin-bottom:14px;color:var(--acc)">📅 Navigation semaines</div>
         <div style="font-size:12px;color:var(--mut);line-height:1.8;margin-bottom:12px">Configurée sur <strong style="color:var(--txt)">±3120 semaines (60 ans)</strong>. Pour modifier, chercher dans planning.html et admin.html :</div>
         <pre style="background:var(--bg);border:.5px solid var(--brd);border-radius:8px;padding:12px;font-size:11px;color:#a8b0c8;overflow-x:auto">currentWeekOffset &lt;= -3120  // changer pour ±5200 = 100 ans</pre>
       </div>
+
+      <!-- URLS -->
       <div style="background:var(--surf);border:.5px solid var(--brd);border-radius:14px;padding:20px 24px">
         <div style="font-size:14px;font-weight:600;margin-bottom:14px;color:var(--acc)">🔗 URLs et références</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;font-size:12px">
           <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Site GGT</div><a href="https://genepigroupetrail.github.io/ggt-plan-entrainement/" target="_blank" style="color:var(--acc)">genepigroupetrail.github.io/ggt-plan-entrainement/</a></div>
-          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Firebase</div><a href="https://console.firebase.google.com/project/ggt-plan-entrainement" target="_blank" style="color:var(--acc)">console.firebase.google.com</a></div>
-          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">GitHub</div><a href="https://github.com/genepigroupetrail/ggt-plan-entrainement" target="_blank" style="color:var(--acc)">github.com/genepigroupetrail/ggt-plan-entrainement</a></div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Firebase Console</div><a href="https://console.firebase.google.com/project/ggt-plan-entrainement" target="_blank" style="color:var(--acc)">console.firebase.google.com</a></div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">GitHub Repo</div><a href="https://github.com/genepigroupetrail/genepigroupetrail.github.io" target="_blank" style="color:var(--acc)">github.com/genepigroupetrail</a></div>
           <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Firebase Project ID</div><code style="color:var(--txt)">ggt-plan-entrainement</code></div>
         </div>
       </div>
+
+      <!-- TEMPLATE EXCEL -->
       <div style="background:var(--surf);border:.5px solid var(--brd);border-radius:14px;padding:20px 24px">
-        <div style="font-size:14px;font-weight:600;margin-bottom:10px;color:var(--acc)">📂 Template Excel</div>
-        <div style="font-size:12px;color:var(--mut);margin-bottom:14px">Fichier template pour créer un plan de compétition.</div>
-        <a href="GGT_Template_Plan_Course.xlsx" download class="btn-publish" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;flex:unset;padding:10px 20px;font-size:13px;border-radius:10px">📥 Télécharger le template Excel</a>
+        <div style="font-size:14px;font-weight:600;margin-bottom:10px;color:var(--acc)">📂 Fichiers téléchargeables</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surf2);border-radius:10px;border:.5px solid var(--brd)">
+            <div>
+              <div style="font-size:13px;font-weight:600">📊 Template Excel — Plan de compétition</div>
+              <div style="font-size:11px;color:var(--mut);margin-top:2px">Utilisé dans Admin → Plans compétition pour créer un nouveau plan</div>
+            </div>
+            <a href="GGT_Template_Plan_Course.xlsx" download class="btn-publish" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;flex:unset;padding:8px 16px;font-size:12px;border-radius:8px;white-space:nowrap">📥 Télécharger</a>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surf2);border-radius:10px;border:.5px solid var(--brd)">
+            <div>
+              <div style="font-size:13px;font-weight:600">📖 Guide de bienvenue — Nouvel adhérent</div>
+              <div style="font-size:11px;color:var(--mut);margin-top:2px">À envoyer par mail aux nouveaux adhérents avec leurs identifiants</div>
+            </div>
+            <a href="guide-adherent.pdf" download class="btn-publish" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;flex:unset;padding:8px 16px;font-size:12px;border-radius:8px;white-space:nowrap">📥 Télécharger</a>
+          </div>
+        </div>
       </div>
+
     </div>
   </div>
 </div>
@@ -391,6 +530,7 @@ function showToast(msg, type) {
     '77B5FE': 'rgba(119,181,254,0.26)',
     '8FBA3A': 'rgba(120,170,60,0.26)',
     '8FA8BF': 'rgba(143,168,191,0.26)',
+    '8FA8B7': 'rgba(143,168,191,0.26)',  // variante Footing
     'F59E0B': 'rgba(245,158,11,0.26)',
     'B08FFF': 'rgba(168,116,255,0.26)',
     'C8B870': 'rgba(200,185,130,0.22)',
@@ -616,6 +756,22 @@ function showToast(msg, type) {
     document.getElementById('days-list').innerHTML = html;
   }
 
+  function renderDays(jours) {
+    var monday = getMondayOfWeek(currentWeekOffset);
+    var normalizedJours = jours.map(function(j) {
+      if (!j) return { plans: [{type:'repos', contenu:'', location:''}] };
+      if (!j.plans) return { plans: [{type: j.type||'repos', contenu: j.contenu||'', location:''}] };
+      return j;
+    });
+    weekData.jours = normalizedJours;
+    var html = '';
+    for (var i = 0; i < 7; i++) {
+      var date = new Date(monday); date.setDate(monday.getDate()+i);
+      html += renderDay(i, date, normalizedJours[i].plans);
+    }
+    document.getElementById('days-list').innerHTML = html;
+  }
+
   window.updatePlanField = function(di, pi, field, value) {
     if (weekData.jours) weekData.jours[di].plans[pi][field] = value;
   };
@@ -660,6 +816,30 @@ function showToast(msg, type) {
     btn.disabled = false; btn.textContent = '📤 Publier la semaine';
   };
   window.unpublish  = async function() { if (await save(false)) { showToast('🔒 Planning dépublié','warn'); renderWeek(); } };
+  window.copyPrevWeek = async function() {
+    if (!confirm('Copier le planning de la semaine précédente sur cette semaine?\n\n⚠️ Le contenu actuel sera remplacé!')) return;
+    try {
+      // Charger la semaine précédente
+      var prevKey = getWeekKey(getMondayOfWeek(currentWeekOffset - 1));
+      var prevSnap = await getDoc(doc(db, 'plannings', prevKey));
+      if (!prevSnap.exists() || !prevSnap.data().jours) {
+        showToast('❌ Aucun planning la semaine précédente', 'err');
+        return;
+      }
+      // Copier les jours (deep copy) dans weekData
+      weekData.jours = JSON.parse(JSON.stringify(prevSnap.data().jours));
+      // Copier aussi le message si présent
+      var prevMessage = prevSnap.data().message || '';
+      document.getElementById('message-semaine').value = prevMessage;
+      // Afficher les jours copiés SANS recharger depuis Firestore
+      renderDays(weekData.jours);
+      showToast('✅ Planning copié! Modifie puis publie.');
+    } catch(e) {
+      console.error('Erreur copie:', e);
+      showToast('❌ Erreur lors de la copie', 'err');
+    }
+  };
+
   window.changeWeek = function(dir) { currentWeekOffset += dir; renderWeek(); };
 
   window.loadCompList = async function() {
@@ -735,11 +915,21 @@ function showToast(msg, type) {
   }
 
   function normDate(d) {
-    if (d instanceof Date) return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+    if (d instanceof Date) {
+      // SheetJS crée des dates à 23:59:39 → arrondir au jour correct en ajoutant 30 min
+      var fixed = new Date(d.getTime() + 30 * 60 * 1000);
+      return String(fixed.getDate()).padStart(2,'0')+'/'+String(fixed.getMonth()+1).padStart(2,'0')+'/'+fixed.getFullYear();
+    }
     return String(d||'');
   }
   function isoDate(d) {
-    if (d instanceof Date) return d.toISOString().split('T')[0];
+    if (d instanceof Date) {
+      // SheetJS crée des dates à 23:59:39 → arrondir au jour correct en ajoutant 30 min
+      var fixed = new Date(d.getTime() + 30 * 60 * 1000);
+      return fixed.getFullYear() + '-' +
+             String(fixed.getMonth()+1).padStart(2,'0') + '-' +
+             String(fixed.getDate()).padStart(2,'0');
+    }
     var p = String(d||'').split('/');
     if (p.length===3) return p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0');
     return '';
@@ -963,11 +1153,14 @@ function showToast(msg, type) {
     if (!user) { redirecting=true; window.location.href='index.html'; return; }
     try {
       var snap = await getDoc(doc(db,'users',user.uid));
-      if (!snap.exists() || snap.data().role !== 'admin') { redirecting=true; window.location.href='planning.html'; return; }
+      if (!snap.exists() || !['admin', 'adhérentadmin'].includes(snap.data().role)) { redirecting=true; window.location.href='planning.html'; return; }
       document.getElementById('user-name').textContent = [snap.data().prenom||'',snap.data().nom||''].filter(Boolean).join(' ') || user.email;
       renderWeek();
     } catch(e) { console.error('Erreur auth:', e); }
   });
+</script>
+</body>
+</html>
 </script>
 </body>
 </html>

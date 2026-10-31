@@ -3,15 +3,44 @@
    Configuration Firebase + Utilitaires réutilisables
    ============================================================ */
 
-// Configuration Firebase (identique sur tous les fichiers)
+// Configuration Firebase du site de TEST (projet "ggt-planning", ID : ggt-planning-45e9e)
+// Source unique : toutes les pages importent cette config depuis ce fichier.
 export const firebaseConfig = {
-  apiKey: "AIzaSyBfyEpytc8VEJ1sdJeCY2Imx5WAu-YazYI",
-  authDomain: "ggt-plan-entrainement.firebaseapp.com",
-  projectId: "ggt-plan-entrainement",
-  storageBucket: "ggt-plan-entrainement.firebasestorage.app",
-  messagingSenderId: "663631056543",
-  appId: "1:663631056543:web:d8cb50121fcf8d1c635caa"
+  apiKey: "AIzaSyA6Wkt7Oqr3OauZJvIma3X5tM5P4VTWCg0",
+  authDomain: "ggt-planning-45e9e.firebaseapp.com",
+  projectId: "ggt-planning-45e9e",
+  storageBucket: "ggt-planning-45e9e.firebasestorage.app",
+  messagingSenderId: "1044188390534",
+  appId: "1:1044188390534:web:bc09e6435cfa1687475d07"
 };
+
+// ============================================================
+// MODE TEST - repère visuel du site de test
+// true  = site de TEST : bandeau orange + "[TEST]" dans le titre de l'onglet
+// false = site OFFICIEL : rien n'est affiché
+// (seule ligne à changer, avec firebaseConfig, pour passer sur l'officiel)
+// ============================================================
+export const MODE_TEST = true;
+
+if (MODE_TEST && typeof document !== "undefined") {
+  const afficherBandeauTest = function () {
+    if (document.getElementById("ggt-mode-test")) return;
+    if (!document.title.startsWith("[TEST]")) document.title = "[TEST] " + document.title;
+
+    const barre = document.createElement("div");
+    barre.id = "ggt-mode-test";
+    barre.style.cssText = "position:fixed;top:0;left:0;right:0;height:4px;background:#fc4c02;z-index:99999;pointer-events:none";
+
+    const pastille = document.createElement("div");
+    pastille.textContent = "🧪 SITE DE TEST";
+    pastille.style.cssText = "position:fixed;left:10px;bottom:10px;background:#fc4c02;color:#fff;font:700 11px/1 Outfit,sans-serif;letter-spacing:.06em;padding:6px 10px;border-radius:999px;z-index:99999;pointer-events:none;opacity:.92";
+
+    barre.appendChild(pastille);
+    document.body.appendChild(barre);
+  };
+  if (document.body) afficherBandeauTest();
+  else document.addEventListener("DOMContentLoaded", afficherBandeauTest);
+}
 
 // ============================================================
 // UTILITAIRES DE GESTION DES DATES - CORRECTIONS UTC

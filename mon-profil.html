@@ -277,14 +277,7 @@
     import { getAuth, onAuthStateChanged, signOut, reauthenticateWithCredential, EmailAuthProvider, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBfyEpytc8VEJ1sdJeCY2Imx5WAu-YazYI",
-      authDomain: "ggt-plan-entrainement.firebaseapp.com",
-      projectId: "ggt-plan-entrainement",
-      storageBucket: "ggt-plan-entrainement.appspot.com",
-      messagingSenderId: "1084549573822",
-      appId: "1:1084549573822:web:7f4fc2bb84d1c987e6c9f7"
-    };
+    import { firebaseConfig } from "./shared-app.js";
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);

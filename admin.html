@@ -407,7 +407,7 @@ service cloud.firestore {
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;font-size:12px">
           <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--acc);font-weight:600">Frontend</div><div style="color:var(--mut);font-size:11px;margin-top:4px">HTML5 / CSS3 / JavaScript ES6<br/>Responsive (mobile + tablette + desktop)</div></div>
           <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--acc);font-weight:600">Backend</div><div style="color:var(--mut);font-size:11px;margin-top:4px">Firebase Authentication (login)<br/>Firebase Firestore (base de données)</div></div>
-          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--acc);font-weight:600">Hosting</div><div style="color:var(--mut);font-size:11px;margin-top:4px">GitHub Pages (genepigroupetrail)<br/>Déploiement automatique sur push</div></div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--acc);font-weight:600">Hosting</div><div style="color:var(--mut);font-size:11px;margin-top:4px">GitHub Pages (davidroussel78)<br/>Déploiement automatique sur push</div></div>
         </div>
       </div>
 
@@ -422,10 +422,10 @@ service cloud.firestore {
       <div style="background:var(--surf);border:.5px solid var(--brd);border-radius:14px;padding:20px 24px">
         <div style="font-size:14px;font-weight:600;margin-bottom:14px;color:var(--acc)">🔗 URLs et références</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;font-size:12px">
-          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Site GGT</div><a href="https://genepigroupetrail.github.io/ggt-plan-entrainement/" target="_blank" style="color:var(--acc)">genepigroupetrail.github.io/ggt-plan-entrainement/</a></div>
-          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Firebase Console</div><a href="https://console.firebase.google.com/project/ggt-plan-entrainement" target="_blank" style="color:var(--acc)">console.firebase.google.com</a></div>
-          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">GitHub Repo</div><a href="https://github.com/genepigroupetrail/genepigroupetrail.github.io" target="_blank" style="color:var(--acc)">github.com/genepigroupetrail</a></div>
-          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Firebase Project ID</div><code style="color:var(--txt)">ggt-plan-entrainement</code></div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Site GGT</div><a href="https://davidroussel78.github.io/ggt-planning/" target="_blank" style="color:var(--acc)">davidroussel78.github.io/ggt-planning/</a></div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Firebase Console</div><a href="https://console.firebase.google.com/project/ggt-planning-45e9e" target="_blank" style="color:var(--acc)">console.firebase.google.com</a></div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">GitHub Repo</div><a href="https://github.com/davidroussel78/ggt-planning" target="_blank" style="color:var(--acc)">github.com/davidroussel78/ggt-planning</a></div>
+          <div style="padding:10px 14px;background:var(--surf2);border-radius:8px"><div style="color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Firebase Project ID</div><code style="color:var(--txt)">ggt-planning-45e9e</code></div>
         </div>
       </div>
 
@@ -495,14 +495,7 @@ function showToast(msg, type) {
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  var firebaseConfig = {
-  apiKey: "AIzaSyA6Wkt7Oqr3OauZJvIma3X5tM5P4VTWCg0",
-  authDomain: "ggt-planning-45e9e.firebaseapp.com",
-  projectId: "ggt-planning-45e9e",
-  storageBucket: "ggt-planning-45e9e.firebasestorage.app",
-  messagingSenderId: "1044188390534",
-  appId: "1:1044188390534:web:bc09e6435cfa1687475d07"
-  };
+  import { firebaseConfig } from "./shared-app.js";
   var app  = initializeApp(firebaseConfig);
   var auth = getAuth(app);
   var db   = getFirestore(app);

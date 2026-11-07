@@ -48,7 +48,8 @@
         <div class="k">UID</div><div class="v" id="v-uid">—</div>
         <div class="k">Rôle actuel</div><div class="v" id="v-role">—</div>
       </div>
-      <button class="btn-go" id="btn-test" style="display:none" onclick="lancerTest()">Lancer le test</button>
+      <button class="btn-go" id="btn-test" style="display:none" onclick="lancerTest()">Test 1 : se donner le rôle admin</button>
+      <button class="btn-go" id="btn-test2" style="display:none;margin-left:10px" onclick="lancerTest2()">Test 2 : lire les fiches des autres</button>
     </div>
 
     <div class="res" id="resultat">
@@ -60,7 +61,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, updateDoc, deleteField, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import { firebaseConfig } from "./shared-app.js";
 
     // Garde-fou : cette page ne fonctionne QUE sur le projet de test.
@@ -127,6 +128,7 @@
 
         $('intro').textContent = "Le test essaie de changer le rôle de CE compte en « admin », puis le remet tout de suite comme avant s'il a réussi. Il n'écrit que dans le projet de test.";
         $('btn-test').style.display = 'inline-block';
+        $('btn-test2').style.display = 'inline-block';
       } catch (e) {
         console.error(e);
         $('intro').textContent = "Impossible de lire le profil : " + (e.code || e.message);
@@ -183,6 +185,27 @@
       } else {
         afficherResultat('mauvais', 'FAILLE PRÉSENTE ⚠️ — rôle à remettre à la main',
           "La modification a réussi, mais le rôle n'a pas pu être remis automatiquement. Dans la console Firebase (projet " + PROJET_TEST + ") : Firestore → users → " + currentUser.uid + " → remets le champ role à " + texteRole(roleOriginal) + ". Rôle actuel : " + roleFinal + ".");
+      }
+      btn.disabled = false;
+    };
+
+    // Test 2 : un adhérent peut-il lire les fiches de tous les autres (téléphone, adresse...) ?
+    window.lancerTest2 = async function () {
+      if (!currentUser || firebaseConfig.projectId !== PROJET_TEST) return;
+      const btn = $('btn-test2');
+      btn.disabled = true;
+      $('resultat').className = 'res';
+      try {
+        const snap = await getDocs(collection(db, 'users'));
+        afficherResultat('mauvais', 'FICHES OUVERTES ⚠️',
+          "Ce compte adhérent a pu lire " + snap.size + " fiche(s) de la collection « users » (téléphone, adresse, date de naissance de tout le monde). Rien n'a été modifié.");
+      } catch (e) {
+        if (e && e.code === 'permission-denied') {
+          afficherResultat('bon', 'PROTÉGÉ ✅', "La base refuse la lecture des fiches des autres (permission-denied). Ce compte ne voit que sa propre fiche.");
+        } else {
+          console.error(e);
+          afficherResultat('neutre', 'Résultat indéterminé', "Erreur inattendue : " + (e.code || e.message) + ". Envoie-moi ce message.");
+        }
       }
       btn.disabled = false;
     };

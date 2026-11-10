@@ -98,7 +98,7 @@
         <button class="btn-h" id="viewer-close">✕ Fermer</button>
       </div>
       <div class="viewer-body" id="viewer-body"></div>
-      <div class="viewer-note">Document réservé aux adhérents du Génépi Groupe Trail. Merci de ne pas le diffuser.</div>
+      <div class="viewer-note" id="viewer-note">Document réservé aux adhérents du Génépi Groupe Trail. Merci de ne pas le diffuser.</div>
     </div>
   </div>
 
@@ -196,7 +196,13 @@
       cadre.src = info.embed; // adresse reconstruite à partir d'identifiants validés (liste blanche)
       cadre.title = item.titre || "Ressource";
       // Pas de "allow-downloads" : le cadre ne peut pas lancer de téléchargement.
-      cadre.setAttribute("sandbox", "allow-scripts allow-same-origin allow-presentation");
+      // Dossier Drive : on autorise l'ouverture des éléments (photos, sous-dossiers) dans un nouvel onglet.
+      cadre.setAttribute("sandbox", info.type === "dossier"
+        ? "allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox"
+        : "allow-scripts allow-same-origin allow-presentation");
+      $("viewer-note").textContent = info.type === "dossier"
+        ? "Dossier : un clic sur une photo ou un sous-dossier l'ouvre dans un nouvel onglet. Document réservé aux adhérents, merci de ne pas le diffuser."
+        : "Document réservé aux adhérents du Génépi Groupe Trail. Merci de ne pas le diffuser.";
       cadre.setAttribute("allow", "fullscreen; autoplay; encrypted-media; picture-in-picture");
       cadre.setAttribute("allowfullscreen", "");
       corps.appendChild(cadre);

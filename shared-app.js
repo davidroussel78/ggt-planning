@@ -145,7 +145,7 @@ export function analyserLienRessource(lien) {
     m = chemin.match(/\/file\/d\/([^/]+)/);
     if (m && idGoogle(m[1])) return { type: "fichier", embed: "https://drive.google.com/file/d/" + m[1] + "/preview" };
     m = chemin.match(/\/folders\/([^/?]+)/);
-    if (m && idGoogle(m[1])) return { type: "dossier", embed: "https://drive.google.com/embeddedfolderview?id=" + m[1] + "#list" };
+    if (m && idGoogle(m[1])) return { type: "dossier", embed: "https://drive.google.com/embeddedfolderview?id=" + m[1] + "#grid" };
     const id = u.searchParams.get("id");
     if ((chemin === "/open" || chemin === "/uc") && idGoogle(id)) {
       return { type: "fichier", embed: "https://drive.google.com/file/d/" + id + "/preview" };

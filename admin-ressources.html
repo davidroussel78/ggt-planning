@@ -174,7 +174,9 @@
       const f = document.createElement("iframe");
       f.src = info.embed;
       f.title = "Aperçu";
-      f.setAttribute("sandbox", "allow-scripts allow-same-origin allow-presentation");
+      f.setAttribute("sandbox", info.type === "dossier"
+        ? "allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox"
+        : "allow-scripts allow-same-origin allow-presentation");
       f.setAttribute("allow", "fullscreen; autoplay; encrypted-media; picture-in-picture");
       f.setAttribute("allowfullscreen", "");
       cadre.appendChild(f);

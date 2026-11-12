@@ -94,7 +94,6 @@
     <div class="viewer-panel">
       <div class="viewer-head">
         <div class="viewer-title" id="viewer-title"></div>
-        <a class="btn-h" id="viewer-ext" target="_blank" rel="noopener noreferrer">↗ Nouvel onglet</a>
         <button class="btn-h" id="viewer-close">✕ Fermer</button>
       </div>
       <div class="viewer-body" id="viewer-body"></div>
@@ -188,7 +187,6 @@
     // ---------- Lecteur ----------
     function ouvrir(item, info) {
       $("viewer-title").textContent = item.titre || "";
-      $("viewer-ext").href = String(item.lien);
 
       const corps = $("viewer-body");
       corps.textContent = "";
